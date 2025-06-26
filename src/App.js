@@ -1,1678 +1,1449 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// Mock product data for demonstration purposes
-const mockProducts = [
-  { id: 'prod-001', name: 'Base Cabinet 36" - Modern Lux', series: 'Modern Lux', style: 'Shaker', color: 'White', category: 'Base Cabinets', unitPrice: 450.00 },
-  { id: 'prod-002', name: 'Wall Cabinet 30" - Modern Lux', series: 'Modern Lux', style: 'Slab', color: 'Grey', category: 'Wall Cabinets', unitPrice: 300.00 },
-  { id: 'prod-003', name: 'Tall Cabinet 84" - Classic Elegance', series: 'Classic Elegance', style: 'Raised Panel', color: 'Espresso', category: 'Tall Cabinets', unitPrice: 800.00 },
-  { id: 'prod-004', name: 'Drawer Base 24" - Urban Loft', series: 'Urban Loft', style: 'Shaker', color: 'Natural Wood', category: 'Base Cabinets', unitPrice: 550.00 },
-  { id: 'prod-005', name: 'Pantry Unit 90" - Modern Lux', series: 'Modern Lux', style: 'Slab', color: 'White', category: 'Tall Cabinets', unitPrice: 1200.00 },
-  { id: 'prod-006', name: 'Corner Base Cabinet - Classic Elegance', series: 'Classic Elegance', style: 'Raised Panel', color: 'Grey', category: 'Base Cabinets', unitPrice: 650.00 },
-  { id: 'prod-007', name: 'Wine Rack Insert - Urban Loft', series: 'Urban Loft', style: 'Shaker', color: 'Natural Wood', category: 'Accessories', unitPrice: 150.00 },
-  { id: 'prod-010', name: 'Spice Rack Pullout - Urban Loft', series: 'Urban Loft', style: 'Raised Panel', color: 'Grey', category: 'Accessories', unitPrice: 100.00 },
-  { id: 'prod-008', name: 'Island Base 48" - Modern Lux', series: 'Modern Lux', style: 'Shaker', color: 'White', category: 'Base Cabinets', unitPrice: 900.00 },
-  { id: 'prod-009', name: 'Glass Door Wall Cabinet - Classic Elegance', series: 'Classic Elegance', style: 'Slab', color: 'Espresso', category: 'Wall Cabinets', unitPrice: 400.00 },
-];
-
-/**
- * Main App component that orchestrates the entire dealer portal UI.
- * Manages active main menu and sub-menu states for navigation.
- */
+// Main App Component
 const App = () => {
-  // State to manage the active main menu item selected by the user.
-  const [activeMainMenu, setActiveMainMenu] = useState('Dashboard');
-  // State to manage the active sub-menu item for the 'Quotations' section.
-  const [activeQuotationSubMenu, setActiveQuotationSubMenu] = useState('Project');
-  // State to manage the active sub-menu item for the 'Users & Settings' section.
-  const [activeUserSettingsSubMenu, setActiveUserSettingsSubMenu] = useState('Dealer Profile');
-  // State to manage the active sub-menu item for 'Orders & Deliveries' section.
-  const [activeOrdersSubTab, setActiveOrdersSubTab] = useState('All Orders');
+  const [activePage, setActivePage] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile menu toggle
 
-  /**
-   * Renders the appropriate content component based on the active main menu item.
-   * This acts as a router for the single-page application structure.
-   */
-  const renderContent = () => {
-    switch (activeMainMenu) {
-      case 'Dashboard':
-        return <DashboardContent />;
-      case 'Product Catalog':
-        return <ProductCatalogContent />;
-      case 'Quotations':
-        return <QuotationsContent activeSubMenu={activeQuotationSubMenu} />;
-      case 'Orders & Deliveries':
-        return <OrdersAndDeliveriesContent activeSubTab={activeOrdersSubTab} setActiveSubTab={setActiveOrdersSubTab} />;
-      case 'Payments':
-        return <PaymentsContent />;
-      case 'Settings':
-        return <UserSettingsContent activeSubMenu={activeUserSettingsSubMenu} />;
-      case 'Returns & Warranties':
-        return <ReturnsWarrantiesContent />;
-      case 'Documents & Resources':
-        return <DocumentsResourcesContent />;
+  // Tailwind CSS classes for consistent styling
+  const headerClasses = "bg-[#2A5255] text-white p-4 flex justify-between items-center shadow-md";
+  const navItemClasses = "px-4 py-2 hover:bg-[#3d6e71] transition-colors duration-200 rounded-md cursor-pointer";
+  const activeNavItemClasses = "bg-[#4CAF50] text-white rounded-md"; // Example active state color
+  const pageContainerClasses = "p-6 bg-gray-100 min-h-screen";
+  const cardClasses = "bg-white p-6 rounded-lg shadow-md";
+  const buttonClasses = "bg-[#4CAF50] hover:bg-[#3d8b40] text-white px-4 py-2 rounded-md transition-colors duration-200";
+  const inputClasses = "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50 p-2";
+  const tableHeaderClasses = "px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider";
+  const tableRowClasses = "px-6 py-4 whitespace-nowrap text-sm text-gray-900";
+  const tabItemClasses = "px-4 py-2 text-gray-600 border-b-2 border-transparent hover:border-green-500 hover:text-green-700 transition-colors duration-200 cursor-pointer";
+  const activeTabItemClasses = "border-green-500 text-green-700 font-semibold";
+
+  // Function to render page content based on activePage state
+  const renderPage = () => {
+    switch (activePage) {
+      case 'dashboard':
+        return <Dashboard cardClasses={cardClasses} buttonClasses={buttonClasses} />;
+      case 'catalogs':
+        return <Catalogs cardClasses={cardClasses} buttonClasses={buttonClasses} />;
+      case 'quotation':
+        return <Quotation cardClasses={cardClasses} buttonClasses={buttonClasses} inputClasses={inputClasses} tableHeaderClasses={tableHeaderClasses} tableRowClasses={tableRowClasses} tabItemClasses={tabItemClasses} activeTabItemClasses={activeTabItemClasses} />;
+      case 'deliveries':
+        return <Deliveries cardClasses={cardClasses} buttonClasses={buttonClasses} inputClasses={inputClasses} tableHeaderClasses={tableHeaderClasses} tableRowClasses={tableRowClasses} tabItemClasses={tabItemClasses} activeTabItemClasses={activeTabItemClasses} />;
+      case 'payments':
+        return <Payments cardClasses={cardClasses} buttonClasses={buttonClasses} tableHeaderClasses={tableHeaderClasses} tableRowClasses={tableRowClasses} tabItemClasses={tabItemClasses} activeTabItemClasses={activeTabItemClasses} />;
+      case 'returns-warranties':
+        return <ReturnsWarranties cardClasses={cardClasses} buttonClasses={buttonClasses} tableHeaderClasses={tableHeaderClasses} tableRowClasses={tableRowClasses} tabItemClasses={tabItemClasses} activeTabItemClasses={activeTabItemClasses} />;
+      case 'resources':
+        return <Resources cardClasses={cardClasses} buttonClasses={buttonClasses} />;
+      case 'users-settings':
+        return <UsersSettings cardClasses={cardClasses} buttonClasses={buttonClasses} inputClasses={inputClasses} tableHeaderClasses={tableHeaderClasses} tableRowClasses={tableRowClasses} tabItemClasses={tabItemClasses} activeTabItemClasses={activeTabItemClasses} />;
       default:
-        return <DashboardContent />; // Default to Dashboard
+        return <Dashboard cardClasses={cardClasses} buttonClasses={buttonClasses} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans antialiased text-gray-800">
-      {/* Top Navigation Bar: Contains logo, main menu links, and user avatar */}
-      <nav className="bg-gradient-to-r from-blue-700 to-blue-900 shadow-lg p-4">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Main flex container for the navigation bar row */}
-          <div className="flex items-center h-16 w-full">
-            {/* Logo or Brand Name for EPOCH Cabinetry - Fixed size */}
-            <div className="flex-shrink-0 flex items-center pr-4">
-              <span className="text-white text-2xl font-bold rounded-lg px-2 py-1">EPOCH Cabinetry</span>
-            </div>
+    <div className="font-sans antialiased text-gray-900">
+      {/* Header */}
+      <header className={headerClasses}>
+        {/* Company Logo */}
+        <div className="flex items-center space-x-3">
+          <img
+            // Updated logo URL from i.postimg.cc
+            src="https://i.postimg.cc/prrnW5rf/Epoch-Logo.png"
+            alt="Epoch Cabinetry Logo"
+            className="h-10 w-auto rounded-md" // Adjusted height and width to auto for better aspect ratio with a real logo
+            onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/100x40/2A5255/FFFFFF?text=EPOCH+LOGO"; }} // Fallback
+          />
+          {/* Removed the "EPOCH Cabinetry" text */}
+        </div>
 
-            {/* Main Navigation Links - Flexible and allows items to shrink and wrap */}
-            <div className="flex items-center flex-grow overflow-hidden">
-              <div className="flex items-center space-x-2 flex-wrap md:flex-nowrap w-full justify-center">
-                {/* Dashboard Button */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Dashboard' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => {
-                    setActiveMainMenu('Dashboard');
-                    setActiveQuotationSubMenu('Project');
-                    setActiveUserSettingsSubMenu('Dealer Profile');
-                    setActiveOrdersSubTab('All Orders');
-                  }}
-                >
-                  Dashboard
-                </button>
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-6">
+          <div className={`${navItemClasses} ${activePage === 'dashboard' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('dashboard')}>Dashboard</div>
+          <div className={`${navItemClasses} ${activePage === 'catalogs' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('catalogs')}>Catalogs</div>
+          <div className={`${navItemClasses} ${activePage === 'quotation' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('quotation')}>Quotations</div> {/* Changed to "Quotations" */}
+          <div className={`${navItemClasses} ${activePage === 'deliveries' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('deliveries')}>Deliveries</div>
+          <div className={`${navItemClasses} ${activePage === 'payments' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('payments')}>Payments</div>
+          <div className={`${navItemClasses} ${activePage === 'returns-warranties' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('returns-warranties')}>Returns & Warranties</div>
+          <div className={`${navItemClasses} ${activePage === 'resources' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('resources')}>Resources</div>
+          <div className={`${navItemClasses} ${activePage === 'users-settings' ? activeNavItemClasses : ''}`} onClick={() => setActivePage('users-settings')}>Users & Settings</div>
+        </nav>
 
-                {/* Product Catalog Button */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Product Catalog' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => {
-                    setActiveMainMenu('Product Catalog');
-                    setActiveQuotationSubMenu('Project');
-                    setActiveUserSettingsSubMenu('Dealer Profile');
-                    setActiveOrdersSubTab('All Orders');
-                  }}
-                >
-                  Product<br />Catalog
-                </button>
-
-                {/* Quotations Button */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Quotations' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => {
-                    setActiveMainMenu('Quotations');
-                    setActiveOrdersSubTab('All Orders');
-                  }}
-                >
-                  Quotations
-                </button>
-
-                {/* Orders & Deliveries Button */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Orders & Deliveries' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => setActiveMainMenu('Orders & Deliveries')}
-                >
-                  Orders &<br />Deliveries
-                </button>
-
-                {/* Payments Button */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Payments' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => {
-                    setActiveMainMenu('Payments');
-                    setActiveQuotationSubMenu('Project');
-                    setActiveUserSettingsSubMenu('Dealer Profile');
-                    setActiveOrdersSubTab('All Orders');
-                  }}
-                >
-                  Payments
-                </button>
-
-                {/* Returns & Warranties Button */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Returns & Warranties' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => {
-                    setActiveMainMenu('Returns & Warranties');
-                    setActiveQuotationSubMenu('Project');
-                    setActiveUserSettingsSubMenu('Dealer Profile');
-                    setActiveOrdersSubTab('All Orders');
-                  }}
-                >
-                  Returns &<br />Warranties
-                </button>
-
-                {/* Documents & Resources Button */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Documents & Resources' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => {
-                    setActiveMainMenu('Documents & Resources');
-                    setActiveQuotationSubMenu('Project');
-                    setActiveUserSettingsSubMenu('Dealer Profile');
-                    setActiveOrdersSubTab('All Orders');
-                  }}
-                >
-                  Documents &<br />Resources
-                </button>
-
-                {/* Settings Button - Moved to this position */}
-                <button
-                  className={`text-white text-base font-medium px-2 py-1 rounded-lg transition duration-300 ease-in-out flex-shrink-0 text-center whitespace-normal ${
-                    activeMainMenu === 'Settings' ? 'bg-blue-600 shadow-md' : 'hover:bg-blue-500'
-                  }`}
-                  onClick={() => setActiveMainMenu('Settings')}
-                >
-                  Settings
-                </button>
-              </div>
-            </div>
-            {/* User Profile / Avatar Section - Fixed size, pushed to far right */}
-            <div className="flex items-center pl-4 flex-shrink-0">
-              <img
-                src="https://placehold.co/40x40/FFFFFF/000000?text=JD" // Placeholder avatar with initials
-                alt="User Avatar"
-                className="w-10 h-10 rounded-full border-2 border-white mr-2"
-              />
-              <span className="text-white text-lg font-medium">John D.</span> {/* Display short user name */}
-            </div>
+        {/* User and Notification Icons */}
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            {/* Notification Icon (Lucide-react bell icon) */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell cursor-pointer">
+              <path d="M6 8a6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">3</span> {/* Example: Notification Count */}
           </div>
+          {/* User Icon (Lucide-react user icon) */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-circle-2 cursor-pointer">
+            <path d="M18 20a6 6 0 0 0-12 0" />
+            <circle cx="12" cy="10" r="4" />
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden text-white focus:outline-none"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              ></path>
+            </svg>
+          </button>
         </div>
-      </nav>
+      </header>
 
-      {/* Conditional Sub-menu Tabs for Quotations, Orders & Deliveries, and Settings */}
-      {(activeMainMenu === 'Quotations' || activeMainMenu === 'Settings' || activeMainMenu === 'Orders & Deliveries') && (
-        <div className="bg-blue-100 py-3 shadow-inner">
-          <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-4 justify-center">
-              {activeMainMenu === 'Quotations' && (
-                <>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeQuotationSubMenu === 'Project'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveQuotationSubMenu('Project')}
-                  >
-                    Project
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeQuotationSubMenu === 'Add Products'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveQuotationSubMenu('Add Products')}
-                  >
-                    Add Products
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeQuotationSubMenu === 'Review & Approve'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveQuotationSubMenu('Review & Approve')}
-                  >
-                    Review & Approve
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeQuotationSubMenu === 'Existing Quotations'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveQuotationSubMenu('Existing Quotations')}
-                  >
-                    Existing Quotations
-                  </button>
-                </>
-              )}
-
-              {activeMainMenu === 'Orders & Deliveries' && (
-                <>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeOrdersSubTab === 'All Orders'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveOrdersSubTab('All Orders')}
-                  >
-                    All Orders
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeOrdersSubTab === 'Deliveries'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveOrdersSubTab('Deliveries')}
-                  >
-                    Deliveries
-                  </button>
-                </>
-              )}
-
-              {activeMainMenu === 'Settings' && (
-                <>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeUserSettingsSubMenu === 'Dealer Profile'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveUserSettingsSubMenu('Dealer Profile')}
-                  >
-                    Dealer Profile
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeUserSettingsSubMenu === 'User Management'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveUserSettingsSubMenu('User Management')}
-                  >
-                    User Management
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeUserSettingsSubMenu === 'Notifications'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveUserSettingsSubMenu('Notifications')}
-                  >
-                    Notifications
-                  </button>
-                  <button
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-                      activeUserSettingsSubMenu === 'Security'
-                        ? 'bg-blue-700 text-white shadow-md'
-                        : 'text-blue-800 hover:bg-blue-200'
-                    }`}
-                    onClick={() => setActiveUserSettingsSubMenu('Security')}
-                  >
-                    Security
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+      {/* Mobile Sidebar */}
+      <div className={`fixed inset-y-0 right-0 w-64 bg-[#2A5255] text-white p-4 transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out md:hidden z-50`}>
+        <div className="flex justify-end mb-4">
+          <button onClick={() => setIsSidebarOpen(false)} className="text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
         </div>
-      )}
+        <nav className="flex flex-col space-y-2">
+          <div className={`${navItemClasses} ${activePage === 'dashboard' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('dashboard'); setIsSidebarOpen(false); }}>Dashboard</div>
+          <div className={`${navItemClasses} ${activePage === 'catalogs' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('catalogs'); setIsSidebarOpen(false); }}>Catalogs</div>
+          <div className={`${navItemClasses} ${activePage === 'quotation' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('quotation'); setIsSidebarOpen(false); }}>Quotations</div> {/* Changed to "Quotations" */}
+          <div className={`${navItemClasses} ${activePage === 'deliveries' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('deliveries'); setIsSidebarOpen(false); }}>Deliveries</div>
+          <div className={`${navItemClasses} ${activePage === 'payments' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('payments'); setIsSidebarOpen(false); }}>Payments</div>
+          <div className={`${navItemClasses} ${activePage === 'returns-warranties' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('returns-warranties'); setIsSidebarOpen(false); }}>Returns & Warranties</div>
+          <div className={`${navItemClasses} ${activePage === 'resources' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('resources'); setIsSidebarOpen(false); }}>Resources</div>
+          <div className={`${navItemClasses} ${activePage === 'users-settings' ? activeNavItemClasses : ''}`} onClick={() => { setActivePage('users-settings'); setIsSidebarOpen(false); }}>Users & Settings</div>
+        </nav>
+      </div>
 
-      {/* Main Content Area: Renders content based on active menu/sub-menu */}
-      <main className="container mx-auto px-4 py-8 lg:px-8">
-        <div className="bg-white p-8 rounded-lg shadow-xl min-h-[calc(100vh-160px)]">
-          {renderContent()}
-        </div>
+      {/* Main Content Area */}
+      <main className={pageContainerClasses}>
+        {renderPage()}
       </main>
     </div>
   );
 };
 
-/**
- * Dashboard Content Component
- * Displays sales performance charts and upcoming deliveries.
- */
-const DashboardContent = () => {
-  // Mock data for Sales by Sales User chart
-  const salesByUser = [
-    { name: 'John Doe', 'Total Sales': 55200 },
-    { name: 'Jane Smith', 'Total Sales': 48150 },
-    { name: 'Peter Jones', 'Total Sales': 32900 },
-  ];
-
-  // Mock data for Sales by Product Series chart
-  const salesByProduct = [
-    { name: 'Modern Lux', 'Total Sales': 35800 },
-    { name: 'Classic Elegance', 'Total Sales': 42500 },
-    { name: 'Urban Loft', 'Total Sales': 23750 },
-  ];
-
-  // Mock data for Upcoming Deliveries table (now moved to Orders & Deliveries page)
-  // This data will be part of the Deliveries sub-tab within OrdersAndDeliveriesContent
-  const upcomingDeliveries = [
-    { orderId: '#EPOCH-003', clientName: 'Emily White', deliveryDate: '2025-07-01', status: 'Pending Shipment' },
-    { orderId: '#EPOCH-004', clientName: 'David Lee', deliveryDate: '2025-07-05', status: 'Processing' },
-    { orderId: '#EPOCH-005', clientName: 'Jessica Kim', deliveryDate: '2025-07-10', status: 'Confirmed' },
-  ];
-
+// Dashboard Component
+const Dashboard = ({ cardClasses, buttonClasses }) => {
+  // Placeholder for chart data and options (using recharts could be a good next step)
+  // For now, we'll just show placeholder images.
+  const chartPlaceholder1 = "https://placehold.co/400x200/FFFFFF/000000?text=Sales+by+Salesman+Graph";
+  const chartPlaceholder2 = "https://placehold.co/400x200/FFFFFF/000000?text=Sales+by+Collections+Graph";
 
   return (
     <div>
-      <h2 className="text-3xl font-extrabold text-blue-800 mb-6">Dashboard</h2>
-      <p className="text-gray-700 leading-relaxed mb-8">
-        Welcome to your EPOCH Cabinetry Dealer Portal Dashboard! Here you'll find a quick overview of your key activities,
-        including recent orders, pending quotations, and important performance insights.
-      </p>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
 
-      {/* Existing Dashboard Summary Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-blue-50 rounded-lg p-6 shadow-md border border-blue-200">
-          <h3 className="text-xl font-semibold text-blue-700 mb-2">Pending Quotations</h3>
-          <p className="text-3xl font-bold text-blue-900">7</p>
-          <p className="text-sm text-gray-600 mt-2">New quotations awaiting your review.</p>
+      {/* Key Metrics in Box Format */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className={`${cardClasses} flex flex-col items-center justify-center text-center p-4`}>
+          <h2 className="text-lg font-semibold text-gray-700">Pending Quotations</h2>
+          <p className="text-4xl font-bold text-green-600 mt-2">12</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-6 shadow-md border border-green-200">
-          <h3 className="text-xl font-semibold text-green-700 mb-2">Recent Orders</h3>
-          <p className="text-3xl font-bold text-green-900">3</p>
-          <p className="text-sm text-gray-600 mt-2">Orders placed in the last 7 days.</p>
+        <div className={`${cardClasses} flex flex-col items-center justify-center text-center p-4`}>
+          <h2 className="text-lg font-semibold text-gray-700">Open Orders</h2>
+          <p className="text-4xl font-bold text-blue-600 mt-2">8</p>
         </div>
-        <div className="bg-yellow-50 rounded-lg p-6 shadow-md border border-yellow-200">
-          <h3 className="text-xl font-semibold text-yellow-700 mb-2">Messages</h3>
-          <p className="text-3xl font-bold text-yellow-900">2</p>
-          <p className="text-sm text-gray-600 mt-2">Unread messages from EPOCH support.</p>
+        <div className={`${cardClasses} flex flex-col items-center justify-center text-center p-4`}>
+          <h2 className="text-lg font-semibold text-gray-700">Scheduled Deliveries</h2>
+          <p className="text-4xl font-bold text-yellow-600 mt-2">5</p>
+        </div>
+        <div className={`${cardClasses} flex flex-col items-center justify-center text-center p-4`}>
+          <h2 className="text-lg font-semibold text-gray-700">Pending Invoices</h2>
+          <p className="text-4xl font-bold text-red-600 mt-2">3</p>
         </div>
       </div>
 
-      {/* Charts for Sales Performance: Arranged horizontally for widescreen */}
-      <div className="flex flex-col lg:flex-row gap-6 mb-8">
-        {/* Sales by Sales User Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 flex-1">
-          <h3 className="text-2xl font-semibold text-blue-700 mb-4">Sales Performance by Sales User</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={salesByUser}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis dataKey="name" stroke="#6b7280" angle={-15} textAnchor="end" height={50} />
-              <YAxis stroke="#6b7280" />
-              <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }} />
-              <Legend />
-              <Bar dataKey="Total Sales" fill="#4299e1" barSize={30} radius={[10, 10, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Sales by Product Series Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 flex-1">
-          <h3 className="text-2xl font-semibold text-blue-700 mb-4">Sales by Product Series</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={salesByProduct}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis dataKey="name" stroke="#6b7280" angle={-15} textAnchor="end" height={50} />
-              <YAxis stroke="#6b7280" />
-              <Tooltip cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }} />
-              <Legend />
-              <Bar dataKey="Total Sales" fill="#68d391" barSize={30} radius={[10, 10, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Notifications */}
+      <div className={`${cardClasses} mb-8`}>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Notifications</h2>
+        <ul className="list-disc list-inside space-y-2">
+          <li>New quotation #2024-001 submitted for review.</li>
+          <li>Order #ORD-5678 is scheduled for delivery tomorrow.</li>
+          <li>Invoice #INV-9101 is due in 3 days.</li>
+        </ul>
       </div>
 
-      {/* Placeholder for the Upcoming Deliveries, as it's now part of Orders & Deliveries page */}
-      <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200">
-        <h3 className="text-2xl font-semibold text-blue-700 mb-4">Upcoming Deliveries (See Orders & Deliveries)</h3>
-        <p className="text-gray-600">Detailed upcoming delivery schedules can now be found under the "Orders & Deliveries" section.</p>
+      {/* Sales Graphs */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className={cardClasses}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">Sales by Salesman</h2>
+            <select className="border border-gray-300 rounded-md p-2">
+              <option>Last 7 Days</option>
+              <option>Last 30 Days</option>
+              <option>Last Quarter</option>
+            </select>
+          </div>
+          <img src={chartPlaceholder1} alt="Sales by Salesman Graph" className="w-full h-auto rounded-md" />
+        </div>
+        <div className={cardClasses}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">Sales by Collections</h2>
+            <select className="border border-gray-300 rounded-md p-2">
+              <option>Last 7 Days</option>
+              <option>Last 30 Days</option>
+              <option>Last Quarter</option>
+            </select>
+          </div>
+          <img src={chartPlaceholder2} alt="Sales by Collections Graph" className="w-full h-auto rounded-md" />
+        </div>
       </div>
     </div>
   );
 };
 
-/**
- * Product Catalog Content Component
- * Displays a list of products with filtering options.
- */
-const ProductCatalogContent = () => (
-  <div>
-    <h2 className="text-3xl font-extrabold text-blue-800 mb-6">Product Catalog</h2>
-    <p className="text-gray-700 leading-relaxed">
-      Explore the complete range of EPOCH Cabinetry products. Use the filters below to refine your search by style,
-      material, finish, and more. Detailed product specifications, pricing, and high-resolution images are available
-      for each item.
-    </p>
-    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Placeholder Product Cards - example of responsive grid */}
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="bg-gray-50 rounded-lg p-4 shadow-md border border-gray-200">
-          <img
-            src={`https://placehold.co/300x200/CBD5E1/475569?text=Cabinet+Series+${i}`}
-            alt={`Cabinet Series ${i}`}
-            className="w-full h-40 object-cover rounded-md mb-4"
-          />
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Elegant Series {i}</h3>
-          <p className="text-gray-600 text-sm">
-            Modern design with premium finishes. Ideal for contemporary kitchens.
-          </p>
-          <button className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-            View Details
-          </button>
-        </div>
-      ))}
+// Catalogs Component
+const Catalogs = ({ cardClasses, buttonClasses }) => {
+  // Helper to map SW color names to approximate hex codes
+  const getCssColor = (swColorName) => {
+    switch (swColorName) {
+      case "Extra White (SW 7006)": return "#F8F8F8"; // Very light off-white
+      case "Mindful Gray (SW 7016)": return "#C0C0C0"; // Light gray
+      case "Naval (SW 6244)": return "#000080"; // Deep navy blue
+      case "Pure White (SW 7005)": return "#FFFFFF"; // Pure white
+      case "Sea Salt (SW 6204)": return "#D4E1E1"; // Soft green-gray
+      case "Hardware (SW 6172)": return "#555B5B"; // Dark gray/brown
+      case "Early American (SW 3144)": return "#A0522D"; // Sienna (reddish-brown)
+      case "Walnut (SW 3148)": return "#5C3500"; // Dark brown
+      case "Fruitwood (SW 3137)": return "#D2B48C"; // Tan (golden-brown)
+      default: return "#CCCCCC"; // Default light gray for unknown colors
+    }
+  };
+
+  const collections = [
+    {
+      name: "Modern & Minimalism",
+      colors: ["Extra White (SW 7006)", "Mindful Gray (SW 7016)", "Naval (SW 6244)"],
+      description: "Sleek lines, uncluttered spaces, and a focus on functionality define this collection. Perfect for contemporary homes seeking a refined and simple aesthetic.",
+      designPhilosophy: ["Clean Design", "Functional Elegance", "Contemporary Appeal"],
+      image: "https://placehold.co/300x200/D0D3D4/2C3E50?text=Modern+Minimalism"
+    },
+    {
+      name: "Classical & Transitional",
+      colors: ["Pure White (SW 7005)", "Sea Salt (SW 6204)", "  Hardware (SW 6172)"],
+      description: "Blending timeless elegance with modern sensibilities, this collection offers a balanced and inviting feel. Ideal for those who appreciate traditional charm with a fresh twist.",
+      designPhilosophy: ["Timeless Charm", "Balanced Design", "Versatile Style"],
+      image: "https://placehold.co/300x200/A2D9CE/1F618D?text=Classical+Transitional"
+    },
+    {
+      name: "Artisans",
+      colors: ["Early American (SW 3144)", "Walnut (SW 3148)", "Fruitwood (SW 3137)"],
+      woodChoices: ["White Oak", "Maple", "Cherry"],
+      description: "Crafted with passion and precision, the Artisans collection highlights the natural beauty of wood. Each piece is a testament to traditional craftsmanship, bringing warmth and character to any space.",
+      designPhilosophy: ["Handcrafted Quality", "Natural Beauty", "Rich Character"],
+      image: "https://placehold.co/300x200/F1C40F/8E44AD?text=Artisans"
+    },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Catalogs</h1>
+      <p className="mb-8 text-gray-600">Explore our exquisite cabinetry collections, each designed to bring unique style and functionality to any home. Click on a collection to discover more.</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {collections.map((collection, index) => (
+          <div key={index} className={`${cardClasses} flex flex-col items-center text-center transition-transform duration-300 hover:scale-105 cursor-pointer`}>
+            <img src={collection.image} alt={collection.name} className="w-full h-48 object-cover rounded-t-lg mb-4" />
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">{collection.name}</h2>
+            <p className="text-gray-600 text-sm mb-4">{collection.description}</p>
+            <div className="text-left w-full px-4">
+              <h3 className="text-md font-medium text-gray-700 mb-2">Design Philosophy:</h3>
+              <ul className="list-disc list-inside text-sm text-gray-600 mb-4">
+                {collection.designPhilosophy.map((msg, i) => (
+                  <li key={i}>{msg}</li>
+                ))}
+              </ul>
+              <h3 className="text-md font-medium text-gray-700 mb-2">Colors:</h3>
+              <div className="flex flex-wrap gap-2 mb-4"> {/* Use flexbox for horizontal layout of color circles */}
+                {collection.colors.map((colorName, i) => (
+                  <div
+                    key={i}
+                    title={colorName} // Show color name on hover
+                    className="w-8 h-8 rounded-full border border-gray-300 cursor-help shadow-sm" // Bigger circle, subtle shadow
+                    style={{ backgroundColor: getCssColor(colorName) }}
+                  ></div>
+                ))}
+              </div>
+              {collection.woodChoices && (
+                <>
+                  <h3 className="text-md font-medium text-gray-700 mb-2">Wood Choices:</h3>
+                  <ul className="list-disc list-inside text-sm text-gray-600 mb-4">
+                    {collection.woodChoices.map((wood, i) => (
+                      <li key={i}>{wood}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+            <button className={buttonClasses}>View Details</button>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-/**
- * Quotations Content Component
- * Manages different sub-tabs related to quotations (Project, Add Products, Review & Approve, Existing Quotations).
- */
-const QuotationsContent = ({ activeSubMenu }) => {
-  // Options for product selector filters based on mockProducts
-  const productSeriesOptions = Array.from(new Set(mockProducts.map(p => p.series)));
-  const doorStyleOptions = Array.from(new Set(mockProducts.map(p => p.style)));
-  const colorOptions = Array.from(new Set(mockProducts.map(p => p.color)));
-  const categoryOptions = Array.from(new Set(mockProducts.map(p => p.category)));
+// Quotation Component
+const Quotation = ({ cardClasses, buttonClasses, inputClasses, tableHeaderClasses, tableRowClasses, tabItemClasses, activeTabItemClasses }) => {
+  const [activeTab, setActiveTab] = useState('project'); // project, quotation-builder, review-approve, existing-quotations
 
-  // State for product filters
-  const [selectedSeries, setSelectedSeries] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  // Mock data for existing projects and quotations
+  const mockProjects = [
+    { id: 'PROJ-001', name: 'Kitchen Remodel - Smith', status: 'In Progress' },
+    { id: 'PROJ-002', name: 'Bathroom Vanities - Jones', status: 'Completed' },
+    { id: 'PROJ-003', name: 'New Home Build - Davis', status: 'Pending Review' },
+  ];
 
-  // State for quotation items (products currently in the quote)
+  const mockExistingQuotations = [
+    { id: 'QUO-001', projectName: 'Smith Kitchen', date: '2023-01-15', value: '$15,500', status: 'Approved' },
+    { id: 'QUO-002', projectName: 'Jones Bath', date: '2023-02-20', value: '$7,200', status: 'Submitted' },
+    { id: 'QUO-003', projectName: 'Davis New Build', date: '2023-03-10', value: '$25,000', status: 'Draft' },
+  ];
+
+  // Mock data for available products to add to quotation
+  // This list will be conceptually filtered by the selection criteria
+  const availableProducts = [
+    { id: 'PROD-001', name: 'Base Cabinet 12" (Modern-White Oak)', unitPrice: 280.00, collection: 'Modern & Minimalism', doorStyle: 'Slab', drawerStyle: 'Slab', color: 'Extra White (SW 7006)', woodSpecies: 'White Oak', boxConstruction: 'Frameless' },
+    { id: 'PROD-002', name: 'Wall Cabinet 30" (Classical-Maple)', unitPrice: 400.00, collection: 'Classical & Transitional', doorStyle: 'Shaker', drawerStyle: 'Shaker', color: 'Pure White (SW 7005)', woodSpecies: 'Maple', boxConstruction: 'Framed' },
+    { id: 'PROD-003', name: 'Pantry Cabinet (Artisans-Cherry)', unitPrice: 950.00, collection: 'Artisans', doorStyle: 'Raised Panel', drawerStyle: 'Standard', color: 'Walnut (SW 3148)', woodSpecies: 'Cherry', boxConstruction: 'Framed' },
+    { id: 'PROD-004', name: 'Base Cabinet 24" (Modern-Maple)', unitPrice: 350.00, collection: 'Modern & Minimalism', doorStyle: 'Slab', drawerStyle: 'Slab', color: 'Mindful Gray (SW 7016)', woodSpecies: 'Maple', boxConstruction: 'Frameless' },
+  ];
+
+
+  // State for Quotation Builder
   const [quotationItems, setQuotationItems] = useState([
-    { id: 'prod-001', product: 'Base Cabinet 36" - Modern Lux', quantity: 2, unitPrice: 450.00 },
-    { id: 'prod-003', product: 'Tall Cabinet 84" - Classic Elegance', quantity: 1, unitPrice: 800.00 },
+    { id: 'PROD-001', product: 'Base Cabinet 12" (Modern-White Oak)', quantity: 1, unitPrice: 280.00, total: 280.00 },
+    { id: 'PROD-002', product: 'Wall Cabinet 30" (Classical-Maple)', quantity: 2, unitPrice: 400.00, total: 800.00 },
   ]);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [assemblyCharges, setAssemblyCharges] = useState(0);
+  const [discountRate, setDiscountRate] = useState(0); // in percent
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [specialNotes, setSpecialNotes] = useState('');
+  const [roomSpecifiedDelivery, setRoomSpecifiedDelivery] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(''); // New state for selected project ID
 
-  // State for additional charges/discounts in the quote
-  const [shippingRate, setShippingRate] = useState(150.00);
-  const [additionalCharges, setAdditionalCharges] = useState(50.00);
-  const [discount, setDiscount] = useState(25.00);
+  // State for Product Selector dropdowns
+  const [selectedCollection, setSelectedCollection] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedDoorStyle, setSelectedDoorStyle] = useState('');
+  const [selectedDrawerStyle, setSelectedDrawerStyle] = useState('');
+  const [selectedWoodSpecies, setSelectedWoodSpecies] = useState('');
+  const [selectedBoxConstruction, setSelectedBoxConstruction] = useState('');
 
-  // Effect to filter products dynamically whenever filter selections change
-  useEffect(() => {
-    let currentFiltered = mockProducts;
+  // Filtered products based on selection criteria (for conceptual display)
+  const filteredProducts = availableProducts.filter(product => {
+    return (selectedCollection === '' || product.collection === selectedCollection) &&
+           (selectedColor === '' || product.color === selectedColor) &&
+           (selectedDoorStyle === '' || product.doorStyle === selectedDoorStyle) &&
+           (selectedDrawerStyle === '' || product.drawerStyle === selectedDrawerStyle) &&
+           (selectedWoodSpecies === '' || product.woodSpecies === selectedWoodSpecies) &&
+           (selectedBoxConstruction === '' || product.boxConstruction === selectedBoxConstruction);
+  });
 
-    if (selectedSeries) {
-      currentFiltered = currentFiltered.filter(p => p.series === selectedSeries);
-    }
-    if (selectedStyle) {
-      currentFiltered = currentFiltered.filter(p => p.style === selectedStyle);
-    }
-    if (selectedColor) {
-      currentFiltered = currentFiltered.filter(p => p.color === selectedColor);
-    }
-    if (selectedCategory) {
-      currentFiltered = currentFiltered.filter(p => p.category === selectedCategory);
-    }
-    setFilteredProducts(currentFiltered);
-  }, [selectedSeries, selectedStyle, selectedColor, selectedCategory]);
 
-  /**
-   * Handles adding a product to the quotation list.
-   * If the product already exists, increments its quantity. Otherwise, adds it as a new item.
-   */
-  const handleAddProductToQuotation = (productToAdd) => {
+  // Calculate totals for quotation
+  const subtotal = quotationItems.reduce((sum, item) => sum + item.total, 0);
+  const totalItems = quotationItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalDiscount = (subtotal * (discountRate / 100)) + parseFloat(discountAmount);
+  const grandTotal = subtotal + parseFloat(shippingCost) + parseFloat(assemblyCharges) - totalDiscount;
+
+  // Get selected project name for display
+  const currentProjectName = selectedProjectId
+    ? mockProjects.find(p => p.id === selectedProjectId)?.name
+    : 'No Project Selected';
+
+
+  const handleQuantityChange = (index, newQuantity) => {
+    const updatedItems = [...quotationItems];
+    const quantity = parseInt(newQuantity);
+    if (quantity > 0) { // Ensure quantity is at least 1
+      updatedItems[index].quantity = quantity;
+      updatedItems[index].total = updatedItems[index].quantity * updatedItems[index].unitPrice;
+      setQuotationItems(updatedItems);
+    } else if (quantity === 0) {
+      // Option to remove item if quantity is 0
+      setQuotationItems(updatedItems.filter((_, i) => i !== index));
+    }
+  };
+
+  const addProductToQuotation = (productToAdd) => {
     setQuotationItems(prevItems => {
+      // Check if product already exists in quotation
       const existingItemIndex = prevItems.findIndex(item => item.id === productToAdd.id);
 
       if (existingItemIndex > -1) {
-        // If item exists, increase quantity
+        // If exists, update quantity
         const updatedItems = [...prevItems];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + 1
-        };
+        updatedItems[existingItemIndex].quantity += 1;
+        updatedItems[existingItemIndex].total = updatedItems[existingItemIndex].quantity * updatedItems[existingItemIndex].unitPrice;
         return updatedItems;
       } else {
-        // If item does not exist, add it with quantity 1
+        // If not, add new product
         return [...prevItems, {
           id: productToAdd.id,
-          product: productToAdd.name,
+          product: productToAdd.name, // Use the full name from availableProducts
           quantity: 1,
-          unitPrice: productToAdd.unitPrice
+          unitPrice: productToAdd.unitPrice,
+          total: productToAdd.unitPrice
         }];
       }
     });
   };
 
-  // Calculate total quotation value dynamically
-  const subtotal = quotationItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const grandTotal = subtotal + shippingRate + additionalCharges - discount;
-
-  /**
-   * Renders content specific to the active sub-menu of the Quotations section.
-   */
-  const renderQuotationSubContent = () => {
-    switch (activeSubMenu) {
-      case 'Project':
-        return (
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Project Details</h3>
-            <p className="text-gray-700 mb-6">
-              Start a new quotation by entering project details, client information, and delivery preferences.
-              This section helps you organize your projects efficiently.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col">
-                <label htmlFor="projectName" className="text-sm font-medium text-gray-700 mb-1">Project Name</label>
-                <input type="text" id="projectName" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Smith Kitchen Renovation" />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="contactPerson" className="text-sm font-medium text-gray-700 mb-1">Contact Person</label>
-                <input type="text" id="contactPerson" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Jane Smith" />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="expectedDeliveryDate" className="text-sm font-medium text-gray-700 mb-1">Expected Delivery Date</label>
-                <input type="date" id="expectedDeliveryDate" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="deliveryAddress" className="text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
-                <input type="text" id="deliveryAddress" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 123 Main St" />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="postalCode" className="text-sm font-medium text-gray-700 mb-1">Postal Code</label>
-                <input type="text" id="postalCode" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 90210" />
-              </div>
-              <div className="flex flex-col md:col-span-2">
-                <label htmlFor="deliveryNotes" className="text-sm font-medium text-gray-700 mb-1">Delivery Notes</label>
-                <textarea id="deliveryNotes" rows="3" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Any specific instructions for delivery..."></textarea>
-              </div>
-            </div>
-            <button className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transition-colors">
-              Save Project Details
-            </button>
-          </div>
-        );
-      case 'Add Products':
-        return (
-          <div>
-            <div className="flex justify-between items-center mb-4"> {/* Flex container for header and button */}
-              <h3 className="text-2xl font-semibold text-blue-700">Add Products to Quotation</h3>
-              {/* Import CSV */}
-              <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-5 rounded-lg shadow-md transition-colors">
-                Import CSV File
-              </button>
-            </div>
-            <p className="text-gray-700 leading-relaxed">
-              Browse the product catalog and add cabinets, accessories, and other items to your current quotation.
-              Specify quantities and any custom modifications required.
-            </p>
-
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Product Selector Area */}
-              <div className="flex-1 bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h4 className="text-xl font-semibold text-gray-800 mb-4">Product Catalog</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  <div className="flex flex-col">
-                    <label htmlFor="productSeries" className="text-sm font-medium text-gray-700 mb-1">Product Series</label>
-                    <select id="productSeries" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      value={selectedSeries} onChange={(e) => setSelectedSeries(e.target.value)}>
-                      <option value="">All Series</option>
-                      {productSeriesOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="doorStyle" className="text-sm font-medium text-gray-700 mb-1">Door Style</label>
-                    <select id="doorStyle" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      value={selectedStyle} onChange={(e) => setSelectedStyle(e.target.value)}>
-                      <option value="">All Styles</option>
-                      {doorStyleOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="color" className="text-sm font-medium text-gray-700 mb-1">Color</label>
-                    <select id="color" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)}>
-                      <option value="">All Colors</option>
-                      {colorOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="category" className="text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select id="category" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                      <option value="">All Categories</option>
-                      {categoryOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Filtered Product List */}
-                <div className="max-h-[300px] overflow-y-auto">
-                  {filteredProducts.length > 0 ? (
-                    <ul className="divide-y divide-gray-200">
-                      {filteredProducts.map(product => (
-                        <li key={product.id} className="py-3 flex justify-between items-center">
-                          <div>
-                            <p className="font-medium text-gray-900">{product.name}</p>
-                            <p className="text-sm text-gray-600">${product.unitPrice.toFixed(2)}</p>
-                          </div>
-                          <button
-                            className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-lg transition-colors"
-                            onClick={() => handleAddProductToQuotation(product)}
-                          >
-                            Add to Quotation
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 text-center py-4">No products match your filter criteria.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Quotation Content Section - Displays added products and totals */}
-              <div className="flex-1 bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200">
-                <h4 className="text-xl font-semibold text-gray-800 mb-4">Quotation Items</h4>
-                <div className="overflow-x-auto mb-6 max-h-[300px] overflow-y-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Product</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {quotationItems.length > 0 ? (
-                        quotationItems.map(item => (
-                          <tr key={item.id}>
-                            <td className="px-4 py-3 whitespace-nowrap">{item.product}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">{item.quantity}</td>
-                            <td className="px-4 py-3 whitespace-nowrap">${item.unitPrice.toFixed(2)}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-right">${(item.quantity * item.unitPrice).toFixed(2)}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="4" className="px-4 py-4 text-center text-gray-500">No products added to quotation.</td>
-                        </tr>
-                      )}
-                    </tbody>
-                    <tfoot>
-                      <tr className="bg-gray-50">
-                        <td colSpan="3" className="px-4 py-3 text-right font-semibold text-gray-700">Subtotal:</td>
-                        <td className="px-4 py-3 font-bold text-gray-900 text-right">${subtotal.toFixed(2)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-
-                {/* Shipping, Charges, Discounts - Vertically aligned with total */}
-                <div className="mt-8 flex justify-end">
-                  <div className="w-full md:w-1/2 lg:w-2/3 space-y-4"> {/* Adjusted width for better alignment */}
-                    <div className="flex justify-between items-center">
-                      <label htmlFor="shippingRate" className="text-sm font-medium text-gray-700">Shipping Rates ($)</label>
-                      <input
-                        type="number"
-                        id="shippingRate"
-                        className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-32 text-right"
-                        value={shippingRate}
-                        onChange={(e) => setShippingRate(parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <label htmlFor="additionalCharges" className="text-sm font-medium text-gray-700">Add Charges ($)</label>
-                      <input
-                        type="number"
-                        id="additionalCharges"
-                        className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-32 text-right"
-                        value={additionalCharges}
-                        onChange={(e) => setAdditionalCharges(parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <label htmlFor="discount" className="text-sm font-medium text-gray-700">Discount ($)</label>
-                      <input
-                        type="number"
-                        id="discount"
-                        className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-32 text-right"
-                        value={discount}
-                        onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transition-colors w-full">
-                      Recalculate Total
-                    </button>
-                    <div className="text-right pt-4 border-t border-gray-200 mt-4">
-                      <p className="text-2xl font-bold text-blue-800">Grand Total: ${grandTotal.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'Review & Approve':
-        return (
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Review & Approve Quotation</h3>
-            <p className="text-gray-700 mb-6">
-              Review the complete quotation details before taking final actions.
-            </p>
-
-            {/* Action Buttons for Review & Approve - MOVED TO TOP */}
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center mb-8">
-              <button className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors">
-                Save as Draft
-              </button>
-              <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors">
-                Generate PDF Quotation
-              </button>
-              <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors">
-                Approve Quotation
-              </button>
-            </div>
-
-            {/* Quotation Summary */}
-            <div className="bg-blue-50 p-6 rounded-lg shadow-md border border-blue-200 mb-8">
-              <h4 className="text-xl font-semibold text-blue-800 mb-3">Quotation Summary</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-                <p><strong>Project Name:</strong> Smith Kitchen Renovation (Mock)</p>
-                <p><strong>Contact Person:</strong> Jane Smith (Mock)</p>
-                <p><strong>Expected Delivery:</strong> 2025-08-15 (Mock)</p>
-                <p><strong>Total Items:</strong> {quotationItems.length}</p>
-                <p><strong>Subtotal:</strong> ${subtotal.toFixed(2)}</p>
-                <p><strong>Shipping:</strong> ${shippingRate.toFixed(2)}</p>
-                <p><strong>Other Charges:</strong> ${additionalCharges.toFixed(2)}</p>
-                <p><strong>Discount:</strong> ${discount.toFixed(2)}</p>
-                <p className="col-span-full text-2xl font-bold text-blue-800 mt-4">Grand Total: ${grandTotal.toFixed(2)}</p>
-              </div>
-            </div>
-
-            {/* Quotation Details (Product List for Review) */}
-            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-8">
-              <h4 className="text-xl font-semibold text-gray-800 mb-4">Quotation Details</h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Product</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quotationItems.length > 0 ? (
-                      quotationItems.map(item => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-3 whitespace-nowrap">{item.product}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">{item.quantity}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">${item.unitPrice.toFixed(2)}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-right">${(item.quantity * item.unitPrice).toFixed(2)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4" className="px-4 py-4 text-center text-gray-500">No products added to quotation.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
-      case 'Existing Quotations':
-        const existingQuotations = [
-          { qNo: 'Q-2025-001', projectName: 'Brown Bathroom Remodel', draftDate: '2025-05-20', approvalDate: '2025-05-22', value: 8500.00, status: 'Approved' },
-          { qNo: 'Q-2025-002', projectName: 'Miller Living Room Cabinets', draftDate: '2025-05-25', approvalDate: '-', value: 3200.00, status: 'Draft' },
-          { qNo: 'Q-2025-003', projectName: 'Johnson Kitchen Refresh', draftDate: '2025-06-01', approvalDate: '2025-06-05', value: 11200.00, status: 'Ordered' },
-          { qNo: 'Q-2025-004', projectName: 'Davis Office Storage', draftDate: '2025-06-10', approvalDate: '-', value: 4500.00, status: 'Pending Review' },
-        ];
-        return (
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Existing Quotations</h3>
-            <p className="text-gray-700 mb-6">
-              View, manage, and track the status of all your submitted and draft quotations.
-              You can search, filter, duplicate, or revise existing quotations.
-            </p>
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Quotation No.</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Draft Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quotation Value ($)</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {existingQuotations.map((quote, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">{quote.qNo}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{quote.projectName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{quote.draftDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{quote.approvalDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">${quote.value.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          quote.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                          quote.status === 'Draft' ? 'bg-gray-100 text-gray-800' :
-                          quote.status === 'Ordered' ? 'bg-blue-100 text-blue-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {quote.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
+  const handleNewProject = () => {
+    alert("New Project button clicked! (Implement new project creation logic here)");
+    // Here you would typically navigate to a new project creation form or open a modal
   };
+
 
   return (
     <div>
-      <h2 className="text-3xl font-extrabold text-blue-800 mb-6">Quotations</h2>
-      <div className="space-y-4">
-        {renderQuotationSubContent()}
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Quotation Management</h1>
+
+      <div className="flex border-b border-gray-200 mb-6">
+        <div className={`${tabItemClasses} ${activeTab === 'project' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('project')}>Project</div>
+        <div className={`${tabItemClasses} ${activeTab === 'quotation-builder' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('quotation-builder')}>Quotation Builder</div>
+        <div className={`${tabItemClasses} ${activeTab === 'review-approve' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('review-approve')}>Review & Approve</div>
+        <div className={`${tabItemClasses} ${activeTab === 'existing-quotations' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('existing-quotations')}>Existing Quotations</div>
       </div>
-    </div>
-  );
-};
 
-/**
- * Orders and Deliveries Content Component
- * Displays lists of all orders and deliveries in separate tabs.
- */
-const OrdersAndDeliveriesContent = ({ activeSubTab, setActiveSubTab }) => {
-  // Mock data for Order List
-  const allOrders = [
-    { orderId: '#EPOCH-001', clientName: 'Sarah Johnson', orderDate: '2024-06-15', status: 'Processing', total: 7500.00 },
-    { orderId: '#EPOCH-002', clientName: 'Michael Green', orderDate: '2024-06-10', status: 'Shipped', total: 12100.00 },
-    { orderId: '#EPOCH-003', clientName: 'Emily White', orderDate: '2025-06-20', status: 'Pending Shipment', total: 9500.00 },
-  ];
-
-  // Mock data for Deliveries
-  const deliveries = [
-    { project: 'Smith Kitchen Renovation', deliveryDate: '2025-07-01', estArrival: '2025-07-03', status: 'In Transit' },
-    { project: 'Johnson Bathroom Update', deliveryDate: '2025-07-05', estArrival: '2025-07-07', status: 'Scheduled' },
-    { project: 'Miller Living Space', deliveryDate: '2025-06-25', estArrival: '2025-06-27', status: 'Delivered' },
-  ];
-
-  const renderOrdersAndDeliveriesContent = () => {
-    switch (activeSubTab) {
-      case 'All Orders':
-        return (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">All Orders</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Order ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allOrders.map((order, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">{order.orderId}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{order.clientName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{order.orderDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
-                          order.status === 'Shipped' ? 'bg-green-100 text-green-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">${order.total.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {activeTab === 'project' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label htmlFor="projectName" className="block text-sm font-medium text-gray-700">Project Name</label>
+              <input type="text" id="projectName" name="projectName" className={inputClasses} placeholder="e.g., Smith Kitchen Remodel" />
+            </div>
+            <div>
+              <label htmlFor="customer" className="block text-sm font-medium text-gray-700">Customer Name</label>
+              <input type="text" id="customer" name="customer" className={inputClasses} placeholder="e.g., John Smith" />
+            </div>
+            <div>
+              <label htmlFor="telephone" className="block text-sm font-medium text-gray-700">Telephone Number</label>
+              <input type="text" id="telephone" name="telephone" className={inputClasses} placeholder="e.g., +1 (555) 123-4567" />
+            </div>
+            <div className="md:col-span-2">
+              <label htmlFor="deliveryAddress" className="block text-sm font-medium text-gray-700">Delivery Address</label>
+              <textarea id="deliveryAddress" name="deliveryAddress" rows="3" className={inputClasses} placeholder="Street, City, State, Postal Code"></textarea>
+            </div>
+            <div>
+              <label htmlFor="deliveryNote" className="block text-sm font-medium text-gray-700">Delivery Note</label>
+              <input type="text" id="deliveryNote" name="deliveryNote" className={inputClasses} placeholder="e.g., Leave package at back door" />
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" id="roomSpecifiedDelivery" name="roomSpecifiedDelivery" className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500" checked={roomSpecifiedDelivery} onChange={(e) => setRoomSpecifiedDelivery(e.target.checked)} />
+              <label htmlFor="roomSpecifiedDelivery" className="ml-2 block text-sm text-gray-900">Room specified delivery</label>
             </div>
           </div>
-        );
-      case 'Deliveries':
-        return (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Upcoming Deliveries</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Project</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Arrival</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deliveries.map((delivery, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">{delivery.project}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{delivery.deliveryDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{delivery.estArrival}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          delivery.status === 'In Transit' ? 'bg-yellow-100 text-yellow-800' :
-                          delivery.status === 'Scheduled' ? 'bg-blue-100 text-blue-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {delivery.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
 
-  return (
-    <div>
-      {/* Orders & Deliveries Sub-tabs */}
-      <div className="bg-blue-100 py-3 shadow-inner rounded-lg mb-6">
-        <div className="flex space-x-4 justify-center">
-          <button
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-              activeSubTab === 'All Orders'
-                ? 'bg-blue-700 text-white shadow-md'
-                : 'text-blue-800 hover:bg-blue-200'
-            }`}
-            onClick={() => setActiveSubTab('All Orders')}
-          >
-            All Orders
-          </button>
-          <button
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-              activeSubTab === 'Deliveries'
-                ? 'bg-blue-700 text-white shadow-md'
-                : 'text-blue-800 hover:bg-blue-200'
-            }`}
-            onClick={() => setActiveSubTab('Deliveries')}
-          >
-            Deliveries
-          </button>
-        </div>
-      </div>
-      {renderOrdersAndDeliveriesContent()}
-    </div>
-  );
-};
-
-
-const PaymentsContent = () => {
-  const [pendingInvoices, setPendingInvoices] = useState([
-    { id: 'INV-003', orderId: '#EPOCH-005', projectName: 'Smith Kitchen Renovation', dueDate: '2025-07-01', amount: 9500.00 },
-    { id: 'INV-004', orderId: '#EPOCH-006', projectName: 'Johnson Bathroom Update', dueDate: '2025-07-15', amount: 6200.00 },
-  ]);
-
-  const [paymentHistory, setPaymentHistory] = useState([
-    { invoiceId: 'INV-001', orderId: '#EPOCH-001', projectName: 'Brown Home Office', paymentDate: '2024-06-16', amount: 3750.00, status: 'Paid' },
-    { invoiceId: 'INV-002', orderId: '#EPOCH-002', projectName: 'Miller Living Space', paymentDate: '2024-06-11', amount: 6050.00, status: 'Paid' },
-  ]);
-
-  const handleMakePayment = (invoiceId) => {
-    // Simulate payment processing
-    setPendingInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
-    const paidInvoice = pendingInvoices.find(inv => inv.id === invoiceId);
-    if (paidInvoice) {
-      setPaymentHistory(prev => [...prev, {
-        invoiceId: paidInvoice.id,
-        orderId: paidInvoice.orderId,
-        projectName: paidInvoice.projectName, // Include project name
-        paymentDate: new Date().toISOString().slice(0, 10), // Current date
-        amount: paidInvoice.amount,
-        status: 'Paid'
-      }]);
-    }
-    // Using a custom message box instead of alert()
-    const messageBox = document.createElement('div');
-    messageBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50';
-    messageBox.innerHTML = `
-      <div class="bg-white p-6 rounded-lg shadow-lg text-center">
-        <p class="text-xl font-semibold mb-4">Payment Initiated!</p>
-        <p class="text-gray-700">Payment for Invoice ID: ${invoiceId} has been simulated.</p>
-        <button id="closeMessageBox" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">OK</button>
-      </div>
-    `;
-    document.body.appendChild(messageBox);
-    document.getElementById('closeMessageBox').onclick = () => {
-      document.body.removeChild(messageBox);
-    };
-  };
-
-  return (
-    <div>
-      <h2 className="text-3xl font-extrabold text-blue-800 mb-6">Payments</h2>
-      <p className="text-gray-700 leading-relaxed mb-8">
-        View your payment history, manage invoices, and make payments for your EPOCH Cabinetry orders.
-        All transactions are securely processed.
-      </p>
-
-      {/* Pending Invoices Section */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-        <h3 className="text-2xl font-semibold text-red-700 mb-4">Pending Invoices</h3>
-        {pendingInvoices.length > 0 ? (
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Existing Projects</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Invoice ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount ($)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Action</th>
+                  <th className={tableHeaderClasses}>Project Number</th>
+                  <th className={tableHeaderClasses}>Project Name</th>
+                  <th className={tableHeaderClasses}>Status</th>
                 </tr>
               </thead>
-              <tbody>
-                {pendingInvoices.map((invoice) => (
-                  <tr key={invoice.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{invoice.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{invoice.orderId}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{invoice.projectName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{invoice.dueDate}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">${invoice.amount.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-lg text-sm transition-colors"
-                        onClick={() => handleMakePayment(invoice.id)}
-                      >
-                        Make Payment
-                      </button>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockProjects.map((project) => (
+                  <tr key={project.id}>
+                    <td className={tableRowClasses}>{project.id}</td>
+                    <td className={tableRowClasses}>{project.name}</td>
+                    <td className={tableRowClasses}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        project.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                        project.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {project.status}
+                      </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        ) : (
-          <p className="text-gray-500 text-center py-4">No pending invoices at this time.</p>
-        )}
+        </div>
+      )}
+
+      {activeTab === 'quotation-builder' && (
+        <div className="flex flex-col lg:flex-row gap-6"> {/* Changed to flex row for large screens */}
+          {/* Product Selector Section - Now on the left/top */}
+          <div className={`${cardClasses} flex-1 lg:w-1/2`}> {/* flex-1 allows it to grow, w-1/2 for lg screens */}
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Product Selector</h2>
+            <div className="flex justify-end mb-4 space-x-2">
+              <button className={buttonClasses}>Import CSV</button>
+            </div>
+
+            <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Filter Products</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"> {/* Grid for filter dropdowns */}
+                <div>
+                  <label htmlFor="collection" className="block text-sm font-medium text-gray-700">Collection</label>
+                  <select id="collection" name="collection" className={inputClasses} value={selectedCollection} onChange={(e) => setSelectedCollection(e.target.value)}>
+                    <option value="">All Collections</option>
+                    <option value="Modern & Minimalism">Modern & Minimalism</option>
+                    <option value="Classical & Transitional">Classical & Transitional</option>
+                    <option value="Artisans">Artisans</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="color" className="block text-sm font-medium text-gray-700">Color</label>
+                  <select id="color" name="color" className={inputClasses} value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)}>
+                    <option value="">All Colors</option>
+                    <option value="Extra White (SW 7006)">Extra White (SW 7006)</option>
+                    <option value="Mindful Gray (SW 7016)">Mindful Gray (SW 7016)</option>
+                    <option value="Naval (SW 6244)">Naval (SW 6244)</option>
+                    <option value="Pure White (SW 7005)">Pure White (SW 7005)</option>
+                    <option value="Sea Salt (SW 6204)">Sea Salt (SW 6204)</option>
+                    <option value="Hardware (SW 6172)">Hardware (SW 6172)</option>
+                    <option value="Early American (SW 3144)">Early American (SW 3144)</option>
+                    <option value="Walnut (SW 3148)">Walnut (SW 3148)</option>
+                    <option value="Fruitwood (SW 3137)">Fruitwood (SW 3137)</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="doorStyle" className="block text-sm font-medium text-gray-700">Door Style</label>
+                  <select id="doorStyle" name="doorStyle" className={inputClasses} value={selectedDoorStyle} onChange={(e) => setSelectedDoorStyle(e.target.value)}>
+                    <option value="">All Door Styles</option>
+                    <option value="Slab">Slab</option>
+                    <option value="Shaker">Shaker</option>
+                    <option value="Raised Panel">Raised Panel</option>
+                    {/* Add more door styles as needed */}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="drawerStyle" className="block text-sm font-medium text-gray-700">Drawer Style</label>
+                  <select id="drawerStyle" name="drawerStyle" className={inputClasses} value={selectedDrawerStyle} onChange={(e) => setSelectedDrawerStyle(e.target.value)}>
+                    <option value="">All Drawer Styles</option>
+                    <option value="Slab">Slab</option>
+                    <option value="Shaker">Shaker</option>
+                    <option value="Standard">Standard</option>
+                    {/* Add more drawer styles as needed */}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="woodSpecies" className="block text-sm font-medium text-gray-700">Wood Species</label>
+                  <select id="woodSpecies" name="woodSpecies" className={inputClasses} value={selectedWoodSpecies} onChange={(e) => setSelectedWoodSpecies(e.target.value)}>
+                    <option value="">All Wood Species</option>
+                    <option value="White Oak">White Oak</option>
+                    <option value="Maple">Maple</option>
+                    <option value="Cherry">Cherry</option>
+                    {/* Add more wood species as needed */}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="boxConstruction" className="block text-sm font-medium text-gray-700">Box Construction</label>
+                  <select id="boxConstruction" name="boxConstruction" className={inputClasses} value={selectedBoxConstruction} onChange={(e) => setSelectedBoxConstruction(e.target.value)}>
+                    <option value="">All Box Constructions</option>
+                    <option value="Framed">Framed</option>
+                    <option value="Frameless">Frameless</option>
+                  </select>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Matching Products:</h3>
+              <div className="max-h-80 overflow-y-auto pr-2 border-t border-gray-200 pt-4"> {/* Added max-height and overflow for scroll */}
+                {filteredProducts.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {filteredProducts.map((product) => (
+                      <div key={product.id} className="flex justify-between items-center bg-white p-3 rounded-md shadow-sm border border-gray-100">
+                        <div>
+                          <p className="font-medium text-gray-800">{product.name}</p>
+                          <p className="text-sm text-gray-600">${product.unitPrice.toFixed(2)}</p>
+                        </div>
+                        <button
+                          className={`${buttonClasses} px-3 py-1 text-sm`}
+                          onClick={() => addProductToQuotation(product)}
+                        >
+                          Add
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-4">No products match the selected criteria.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quotation Details - Now on the right/bottom */}
+          <div className={`${cardClasses} flex-1 lg:w-1/2`}> {/* flex-1 allows it to grow, w-1/2 for lg screens */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Quotations Details:</h2> {/* Changed text here for clarity */}
+              <div className="flex items-center space-x-2">
+                <select
+                  id="selectProject"
+                  className={inputClasses}
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                >
+                  <option value="">-- Select Project --</option>
+                  {mockProjects.map(project => (
+                    <option key={project.id} value={project.id}>{project.name}</option>
+                  ))}
+                </select>
+                <button className={buttonClasses} onClick={handleNewProject}>New Project</button>
+              </div>
+            </div>
+
+            <p className="text-lg font-semibold text-gray-800 mb-3">Current Project: {currentProjectName}</p> {/* Updated label */}
+
+            <div className="overflow-x-auto mb-6">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className={tableHeaderClasses}>Product</th>
+                    <th className={tableHeaderClasses}>Quantity</th>
+                    <th className={tableHeaderClasses}>Unit Price</th>
+                    <th className={tableHeaderClasses}>Total</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {quotationItems.map((item, index) => (
+                    <tr key={item.id}> {/* Use item.id as key if available and unique, otherwise index */}
+                      <td className={tableRowClasses}>{item.product}</td>
+                      <td className={tableRowClasses}>
+                        <input
+                          type="number"
+                          min="0" // Allow 0 to enable removal
+                          value={item.quantity}
+                          onChange={(e) => handleQuantityChange(index, e.target.value)}
+                          className={`${inputClasses} w-20`}
+                        />
+                      </td>
+                      <td className={tableRowClasses}>${item.unitPrice.toFixed(2)}</td>
+                      <td className={tableRowClasses}>${item.total.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  {quotationItems.length === 0 && (
+                    <tr>
+                      <td colSpan="4" className="text-center py-4 text-gray-500">No products added to quotation.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Quotation Summary Fields and Special Notes */}
+            <div className="flex flex-col gap-3"> {/* Use flexbox to manage layout */}
+              <div className="flex flex-col items-end space-y-3 w-full"> {/* This div for right-aligned summary */}
+                <div className="flex justify-between w-full md:w-1/2">
+                  <span className="text-gray-700 font-medium">Subtotal:</span>
+                  <span className="text-gray-900 font-semibold">${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between w-full md:w-1/2">
+                  <label htmlFor="shippingCost" className="text-gray-700 font-medium">Shipping Cost:</label>
+                  <input type="number" id="shippingCost" value={shippingCost} onChange={(e) => setShippingCost(e.target.value)} className={`${inputClasses} w-1/2 text-right`} />
+                </div>
+                <div className="flex justify-between w-full md:w-1/2">
+                  <label htmlFor="assemblyCharges" className="text-gray-700 font-medium">Other Charges:</label> {/* Changed label */}
+                  <input type="number" id="assemblyCharges" value={assemblyCharges} onChange={(e) => setAssemblyCharges(e.target.value)} className={`${inputClasses} w-1/2 text-right`} />
+                </div>
+                <div className="flex justify-between w-full md:w-1/2">
+                  <label htmlFor="discountRate" className="text-gray-700 font-medium">Discount Rate (%):</label>
+                  <input type="number" id="discountRate" value={discountRate} onChange={(e) => setDiscountRate(e.target.value)} className={`${inputClasses} w-1/2 text-right`} />
+                </div>
+                <div className="flex justify-between w-full md:w-1/2">
+                  <label htmlFor="discountAmount" className="block text-sm font-medium text-gray-700">Discount Amount ($):</label>
+                  <input type="number" id="discountAmount" value={discountAmount} onChange={(e) => setDiscountAmount(e.target.value)} className={`${inputClasses} w-1/2 text-right`} />
+                </div>
+                <div className="flex justify-between w-full md:w-1/2">
+                  <span className="text-gray-700 font-medium">Total Discount:</span>
+                  <span className="text-gray-900 font-semibold">-${totalDiscount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between w-full md:w-1/2">
+                  <span className="text-xl font-bold text-gray-800">Grand Total:</span>
+                  <span className="text-xl font-bold text-green-600">${grandTotal.toFixed(2)}</span>
+                </div>
+              </div>
+              {/* Special Notes for Quotation - Now left-aligned and bigger */}
+              <div className="w-full mt-4"> {/* Full width and margin-top for separation */}
+                <label htmlFor="specialNotes" className="block text-sm font-medium text-gray-700 mb-1">Special Notes for Quotation:</label>
+                <textarea id="specialNotes" value={specialNotes} onChange={(e) => setSpecialNotes(e.target.value)} rows="5" className={inputClasses}></textarea> {/* Increased rows to 5 */}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'review-approve' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Review & Approve Quotation</h2>
+          <div className="flex space-x-4 mb-6">
+            <button className={buttonClasses}>Edit</button>
+            <button className={buttonClasses}>Submit</button>
+            <button className={buttonClasses}>Approve</button>
+            <button className={buttonClasses}>Generate External Quotation</button>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Quotation Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div><span className="font-medium">Project Name:</span> {"Smith Kitchen Remodel"}</div> {/* Placeholder for project name */}
+            <div><span className="font-medium">Contact Person:</span> {"John Smith"}</div> {/* Placeholder for contact person */}
+            <div><span className="font-medium">Expected Delivery:</span> {"2023-07-15"}</div> {/* Placeholder for delivery date */}
+            <div><span className="font-medium">Total Items:</span> {totalItems}</div>
+            <div><span className="font-medium">Subtotal:</span> ${subtotal.toFixed(2)}</div>
+            <div><span className="font-medium">Shipping:</span> ${shippingCost.toFixed(2)}</div>
+            <div><span className="font-medium">Other Charges:</span> ${assemblyCharges.toFixed(2)}</div>
+            <div><span className="font-medium">Discount:</span> ${totalDiscount.toFixed(2)}</div>
+            <div className="md:col-span-2 text-xl font-bold text-green-600">
+              <span className="font-medium text-gray-800">Grand Total:</span> ${grandTotal.toFixed(2)}
+            </div>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Special Notes:</h3>
+          <div className="p-4 bg-gray-50 rounded-md border border-gray-200 mb-6">
+            <p className="text-gray-700 whitespace-pre-wrap">{specialNotes || "No special notes."}</p>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Quotation Details:</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Product</th>
+                  <th className={tableHeaderClasses}>Quantity</th>
+                  <th className={tableHeaderClasses}>Unit Price</th>
+                  <th className={tableHeaderClasses}>Total</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {quotationItems.map((item, index) => (
+                  <tr key={index}>
+                    <td className={tableRowClasses}>{item.product}</td>
+                    <td className={tableRowClasses}>{item.quantity}</td>
+                    <td className={tableRowClasses}>${item.unitPrice.toFixed(2)}</td>
+                    <td className={tableRowClasses}>${item.total.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Add more detailed breakdown and notes */}
+        </div>
+      )}
+
+      {activeTab === 'existing-quotations' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Existing Quotations</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Quotation Number</th>
+                  <th className={tableHeaderClasses}>Project Name</th>
+                  <th className={tableHeaderClasses}>Quotation Date</th>
+                  <th className={tableHeaderClasses}>Quotation Value</th>
+                  <th className={tableHeaderClasses}>Status</th>
+                  <th className={tableHeaderClasses}>Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockExistingQuotations.map((quotation) => (
+                  <tr key={quotation.id}>
+                    <td className={tableRowClasses}>{quotation.id}</td>
+                    <td className={tableRowClasses}>{quotation.projectName}</td>
+                    <td className={tableRowClasses}>{quotation.date}</td>
+                    <td className={tableRowClasses}>{quotation.value}</td>
+                    <td className={tableRowClasses}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        quotation.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                        quotation.status === 'Submitted' ? 'bg-blue-100 text-blue-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {quotation.status}
+                      </span>
+                    </td>
+                    <td className={tableRowClasses}>
+                      <button className="text-green-600 hover:text-green-900 mr-2">View</button>
+                      <button className="text-indigo-600 hover:text-indigo-900">Edit</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Deliveries Component
+const Deliveries = ({ cardClasses, buttonClasses, inputClasses, tableHeaderClasses, tableRowClasses, tabItemClasses, activeTabItemClasses }) => {
+  const [activeTab, setActiveTab] = useState('all-orders'); // all-orders, room-by-room-setup, all-deliveries
+
+  const mockOrders = [
+    { id: 'ORD-001', projectName: 'Smith Kitchen', date: '2023-01-20', value: '$15,500', status: 'Processing', items: [{name: 'Base Cabinet', qty: 5}, {name: 'Wall Cabinet', qty: 4}] },
+    { id: 'ORD-002', projectName: 'Jones Bath', date: '2023-03-01', value: '$7,200', status: 'Shipped', items: [{name: 'Vanity 30"', qty: 1}, {name: 'Mirror', qty: 1}] },
+  ];
+
+  const mockDeliveries = [
+    { id: 'ORD-001', projectName: 'Smith Kitchen', value: '$15,500', requiredDate: '2023-07-01', scheduledDate: '2023-06-30', actualDate: '-', status: 'Scheduled', tracking: 'TRK12345' },
+    { id: 'ORD-002', projectName: 'Jones Bath', value: '$7,200', requiredDate: '2023-03-05', scheduledDate: '2023-03-04', actualDate: '2023-03-04', status: 'Delivered', tracking: 'TRK67890' },
+  ];
+
+  // State for Room by Room Delivery Setup
+  const [selectedOrderForRoomSetup, setSelectedOrderForRoomSetup] = useState('');
+  // roomsData structure: { orderId: [{ roomName: 'Kitchen', products: [{name: 'productA', qty: 2}] }] }
+  const [roomsData, setRoomsData] = useState({});
+  const [newRoomName, setNewRoomName] = useState('');
+  const [productToAddToRoom, setProductToAddToRoom] = useState({ name: '', qty: 1 });
+
+  // Handle selecting an order for room setup
+  const handleOrderSelection = (orderId) => {
+    setSelectedOrderForRoomSetup(orderId);
+    // Initialize rooms for this order if not already present
+    if (!roomsData[orderId]) {
+      setRoomsData(prev => ({ ...prev, [orderId]: [] }));
+    }
+  };
+
+  // Handle adding a new room to the selected order
+  const handleAddRoom = () => {
+    if (selectedOrderForRoomSetup && newRoomName.trim() !== '') {
+      setRoomsData(prev => ({
+        ...prev,
+        [selectedOrderForRoomSetup]: [...(prev[selectedOrderForRoomSetup] || []), { name: newRoomName.trim(), products: [] }]
+      }));
+      setNewRoomName('');
+    }
+  };
+
+  // Handle adding a product to a specific room within the selected order
+  const handleAddProductToRoom = (roomName) => {
+    if (selectedOrderForRoomSetup && productToAddToRoom.name.trim() !== '') {
+      setRoomsData(prev => {
+        const updatedOrderRooms = prev[selectedOrderForRoomSetup].map(room => {
+          if (room.name === roomName) {
+            const existingProductIndex = room.products.findIndex(p => p.name === productToAddToRoom.name.trim());
+            if (existingProductIndex > -1) {
+              const updatedProducts = [...room.products];
+              updatedProducts[existingProductIndex].qty += parseInt(productToAddToRoom.qty);
+              return { ...room, products: updatedProducts };
+            } else {
+              return { ...room, products: [...room.products, { name: productToAddToRoom.name.trim(), qty: parseInt(productToAddToRoom.qty) }] };
+            }
+          }
+          return room;
+        });
+        return { ...prev, [selectedOrderForRoomSetup]: updatedOrderRooms };
+      });
+      setProductToAddToRoom({ name: '', qty: 1 }); // Reset product input
+    }
+  };
+
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Deliveries</h1>
+
+      <div className="flex border-b border-gray-200 mb-6">
+        <div className={`${tabItemClasses} ${activeTab === 'all-orders' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('all-orders')}>All Orders</div>
+        <div className={`${tabItemClasses} ${activeTab === 'room-by-room-setup' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('room-by-room-setup')}>Room by Room Delivery Setup</div>
+        <div className={`${tabItemClasses} ${activeTab === 'all-deliveries' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('all-deliveries')}>All Deliveries</div>
       </div>
 
-      {/* Payment History Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-2xl font-semibold text-blue-700 mb-4">Payment History</h3>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Invoice ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paymentHistory.length > 0 ? (
-              paymentHistory.map((payment, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap">{payment.invoiceId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{payment.orderId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{payment.projectName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{payment.paymentDate}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">${payment.amount.toFixed(2)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      {payment.status}
-                    </span>
-                  </td>
+      {activeTab === 'all-orders' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">All Orders</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Order ID</th>
+                  <th className={tableHeaderClasses}>Project Name</th>
+                  <th className={tableHeaderClasses}>Order Date</th>
+                  <th className={tableHeaderClasses}>Order Value</th>
+                  <th className={tableHeaderClasses}>Status</th>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="px-4 py-4 text-center text-gray-500">No payment history available.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td className={tableRowClasses}>{order.id}</td>
+                    <td className={tableRowClasses}>{order.projectName}</td>
+                    <td className={tableRowClasses}>{order.date}</td>
+                    <td className={tableRowClasses}>{order.value}</td>
+                    <td className={tableRowClasses}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'room-by-room-setup' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Room by Room Delivery Setup</h2>
+
+          <div className="mb-6">
+            <label htmlFor="selectOrder" className="block text-sm font-medium text-gray-700">Select Order:</label>
+            <select
+              id="selectOrder"
+              className={inputClasses}
+              value={selectedOrderForRoomSetup}
+              onChange={(e) => handleOrderSelection(e.target.value)}
+            >
+              <option value="">-- Select an Order --</option>
+              {mockOrders.map(order => (
+                <option key={order.id} value={order.id}>{order.id} - {order.projectName}</option>
+              ))}
+            </select>
+          </div>
+
+          {selectedOrderForRoomSetup && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Configure Rooms for Order: {selectedOrderForRoomSetup}</h3>
+
+              {/* Add New Room */}
+              <div className="flex gap-2 mb-6">
+                <input
+                  type="text"
+                  placeholder="New Room Name (e.g., Kitchen, Master Bath)"
+                  className={`${inputClasses} flex-grow`}
+                  value={newRoomName}
+                  onChange={(e) => setNewRoomName(e.target.value)}
+                />
+                <button className={buttonClasses} onClick={handleAddRoom}>Add Room</button>
+              </div>
+
+              {/* List of Configured Rooms */}
+              {roomsData[selectedOrderForRoomSetup]?.length > 0 ? (
+                <div className="space-y-4 max-h-96 overflow-y-auto p-2 border border-gray-200 rounded-md bg-white">
+                  {roomsData[selectedOrderForRoomSetup].map((room, roomIndex) => (
+                    <div key={room.name} className="border p-4 rounded-md bg-gray-50">
+                      <h4 className="text-md font-semibold text-gray-800 mb-2">{room.name}</h4>
+
+                      {/* Products in this Room */}
+                      {room.products.length > 0 ? (
+                        <ul className="list-disc list-inside text-sm text-gray-700 mb-2">
+                          {room.products.map((product, prodIndex) => (
+                            <li key={prodIndex}>{product.name} (Qty: {product.qty})</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500 mb-2">No products assigned to this room yet.</p>
+                      )}
+
+                      {/* Add Product to this Room */}
+                      <div className="flex gap-2 mt-3">
+                        <input
+                          type="text"
+                          placeholder="Product Name"
+                          className={`${inputClasses} flex-grow`}
+                          value={productToAddToRoom.name}
+                          onChange={(e) => setProductToAddToRoom(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Qty"
+                          className={`${inputClasses} w-16`}
+                          value={productToAddToRoom.qty}
+                          onChange={(e) => setProductToAddToRoom(prev => ({ ...prev, qty: parseInt(e.target.value) || 1 }))}
+                        />
+                        <button
+                          className={`${buttonClasses} px-3 py-1 text-sm`}
+                          onClick={() => handleAddProductToRoom(room.name)}
+                        >
+                          Add Product
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600 mt-4 p-4 border border-dashed border-gray-300 rounded-md text-center">
+                  Select an order and add your first room to begin setting up deliveries.
+                </p>
+              )}
+              <button className={`${buttonClasses} mt-6`}>Save Room Delivery Setup</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'all-deliveries' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">All Deliveries</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Order ID</th>
+                  <th className={tableHeaderClasses}>Project Name</th>
+                  <th className={tableHeaderClasses}>Order Value</th>
+                  <th className={tableHeaderClasses}>Required Delivery Date</th>
+                  <th className={tableHeaderClasses}>Scheduled Delivery Date</th>
+                  <th className={tableHeaderClasses}>Actual Delivery Date</th>
+                  <th className={tableHeaderClasses}>Status</th>
+                  <th className={tableHeaderClasses}>Tracking Number</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockDeliveries.map((delivery) => (
+                  <tr key={delivery.id}>
+                    <td className={tableRowClasses}>{delivery.id}</td>
+                    <td className={tableRowClasses}>{delivery.projectName}</td>
+                    <td className={tableRowClasses}>{delivery.value}</td>
+                    <td className={tableRowClasses}>{delivery.requiredDate}</td>
+                    <td className={tableRowClasses}>{delivery.scheduledDate}</td>
+                    <td className={tableRowClasses}>{delivery.actualDate}</td>
+                    <td className={tableRowClasses}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        delivery.status === 'Scheduled' ? 'bg-blue-100 text-blue-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {delivery.status}
+                      </span>
+                    </td>
+                    <td className={tableRowClasses}>{delivery.tracking}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Payments Component
+const Payments = ({ cardClasses, buttonClasses, tableHeaderClasses, tableRowClasses, tabItemClasses, activeTabItemClasses }) => {
+  const [activeTab, setActiveTab] = useState('pending-invoices'); // pending-invoices, payment-history
+
+  const mockPendingInvoices = [
+    { no: 'INV-001', date: '2023-05-20', projectName: 'Smith Kitchen', dueDate: '2023-06-30', amount: '$5,000', pendingAmount: '$5,000' },
+    { no: 'INV-002', date: '2023-06-10', projectName: 'Davis New Build', dueDate: '2023-07-10', amount: '$10,000', pendingAmount: '$10,000' },
+  ];
+
+  const mockPaymentHistory = [
+    { no: 'INV-998', projectName: 'Old Project', paymentDate: '2023-04-15', amount: '$3,000', method: 'ACH' },
+    { no: 'INV-999', projectName: 'Previous Job', paymentDate: '2023-05-01', amount: '$2,500', method: 'Credit Card' },
+  ];
+
+  const handleMakePayment = (invoiceNo) => {
+    // Implement payment logic (e.g., open a payment modal or redirect)
+    alert(`Initiating payment for Invoice No: ${invoiceNo}`); // Replace with a proper modal
+  };
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Payments</h1>
+
+      <div className="flex border-b border-gray-200 mb-6">
+        <div className={`${tabItemClasses} ${activeTab === 'pending-invoices' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('pending-invoices')}>Pending Invoices</div>
+        <div className={`${tabItemClasses} ${activeTab === 'payment-history' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('payment-history')}>Payment History</div>
+      </div>
+
+      {activeTab === 'pending-invoices' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Pending Invoices</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Invoice No</th>
+                  <th className={tableHeaderClasses}>Invoice Date</th>
+                  <th className={tableHeaderClasses}>Project Name</th>
+                  <th className={tableHeaderClasses}>Due Date</th>
+                  <th className={tableHeaderClasses}>Invoice Amount</th>
+                  <th className={tableHeaderClasses}>Pending Amount</th>
+                  <th className={tableHeaderClasses}>Action</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockPendingInvoices.map((invoice) => (
+                  <tr key={invoice.no}>
+                    <td className={tableRowClasses}>{invoice.no}</td>
+                    <td className={tableRowClasses}>{invoice.date}</td>
+                    <td className={tableRowClasses}>{invoice.projectName}</td>
+                    <td className={tableRowClasses}>{invoice.dueDate}</td>
+                    <td className={tableRowClasses}>${parseFloat(invoice.amount).toFixed(2)}</td>
+                    <td className={tableRowClasses}>${parseFloat(invoice.pendingAmount).toFixed(2)}</td>
+                    <td className={tableRowClasses}>
+                      <button className={buttonClasses} onClick={() => handleMakePayment(invoice.no)}>Make Payment</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'payment-history' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Payment History</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Invoice No</th>
+                  <th className={tableHeaderClasses}>Project Name</th>
+                  <th className={tableHeaderClasses}>Payment Date</th>
+                  <th className={tableHeaderClasses}>Payment Amount</th>
+                  <th className={tableHeaderClasses}>Payment Method</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockPaymentHistory.map((payment) => (
+                  <tr key={payment.no}>
+                    <td className={tableRowClasses}>{payment.no}</td>
+                    <td className={tableRowClasses}>{payment.projectName}</td>
+                    <td className={tableRowClasses}>{payment.paymentDate}</td>
+                    <td className={tableRowClasses}>${parseFloat(payment.amount).toFixed(2)}</td>
+                    <td className={tableRowClasses}>{payment.method}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Returns & Warranties Component
+const ReturnsWarranties = ({ cardClasses, buttonClasses, tableHeaderClasses, tableRowClasses, tabItemClasses, activeTabItemClasses }) => {
+  const [activeTab, setActiveTab] = useState('returns-history'); // returns-history, warranties-history
+
+  const mockReturnsHistory = [
+    { id: 'RET-001', orderId: 'ORD-001', date: '2023-06-01', reason: 'Damaged item', status: 'Pending Approval' },
+    { id: 'RET-002', orderId: 'ORD-999', date: '2023-05-10', reason: 'Wrong size', status: 'Approved' },
+  ];
+
+  const mockWarrantiesHistory = [
+    { id: 'WAR-001', product: 'Cabinet Door', date: '2023-04-20', issue: 'Hinge broken', status: 'Under Review' },
+    { id: 'WAR-002', product: 'Drawer Slide', date: '2023-03-01', issue: 'Sticky mechanism', status: 'Resolved' },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Returns & Warranties</h1>
+
+      <div className="flex space-x-4 mb-6">
+        <button className={buttonClasses}>Submit Return Request</button>
+        <button className={buttonClasses}>Submit Warranty Request</button>
+      </div>
+
+      <div className="flex border-b border-gray-200 mb-6">
+        <div className={`${tabItemClasses} ${activeTab === 'returns-history' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('returns-history')}>Returns History</div>
+        <div className={`${tabItemClasses} ${activeTab === 'warranties-history' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('warranties-history')}>Warranties History</div>
+      </div>
+
+      {activeTab === 'returns-history' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Returns History</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Return ID</th>
+                  <th className={tableHeaderClasses}>Order ID</th>
+                  <th className={tableHeaderClasses}>Date</th>
+                  <th className={tableHeaderClasses}>Reason</th>
+                  <th className={tableHeaderClasses}>Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockReturnsHistory.map((item) => (
+                  <tr key={item.id}>
+                    <td className={tableRowClasses}>{item.id}</td>
+                    <td className={tableRowClasses}>{item.orderId}</td>
+                    <td className={tableRowClasses}>{item.date}</td>
+                    <td className={tableRowClasses}>{item.reason}</td>
+                    <td className={tableRowClasses}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        item.status === 'Pending Approval' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'warranties-history' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Warranties History</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>Warranty ID</th>
+                  <th className={tableHeaderClasses}>Product</th>
+                  <th className={tableHeaderClasses}>Date</th>
+                  <th className={tableHeaderClasses}>Issue</th>
+                  <th className={tableHeaderClasses}>Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockWarrantiesHistory.map((item) => (
+                  <tr key={item.id}>
+                    <td className={tableRowClasses}>{item.id}</td>
+                    <td className={tableRowClasses}>{item.product}</td>
+                    <td className={tableRowClasses}>{item.date}</td>
+                    <td className={tableRowClasses}>{item.issue}</td>
+                    <td className={tableRowClasses}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        item.status === 'Under Review' ? 'bg-blue-100 text-blue-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Resources Component
+const Resources = ({ cardClasses, buttonClasses }) => {
+  const resourceCategories = [
+    { title: "Product Documentation", description: "Access detailed specifications, assembly guides, and care instructions for all Epoch Cabinetry products." },
+    { title: "Marketing Materials", description: "Download high-resolution images, brochures, and promotional content to support your sales efforts." },
+    { title: "Training Resources", description: "Find webinars, tutorials, and guides to enhance your product knowledge and sales techniques." },
+    { title: "Company Policies & Legal", description: "Review our latest company policies, terms of service, and legal documents." },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Resources</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {resourceCategories.map((category, index) => (
+          <div key={index} className={cardClasses}>
+            <h2 className="text-xl font-semibold text-gray-800 mb-3">{category.title}</h2>
+            <p className="text-gray-600 mb-4">{category.description}</p>
+            <button className={buttonClasses}>Browse Resources</button>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-const UserSettingsContent = ({ activeSubMenu }) => {
-  // Mock data for User Management
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Alice Johnson', email: 'alice.j@example.com', role: 'Admin', status: 'Active' },
-    { id: 2, name: 'Bob Williams', email: 'bob.w@example.com', role: 'Sales User', status: 'Active' },
-    { id: 3, name: 'Charlie Brown', email: 'charlie.b@example.com', role: 'Viewer', status: 'Inactive' },
-  ]);
+// Users & Settings Component
+const UsersSettings = ({ cardClasses, buttonClasses, inputClasses, tableHeaderClasses, tableRowClasses, tabItemClasses, activeTabItemClasses }) => {
+  const [activeTab, setActiveTab] = useState('dealer-info'); // dealer-info, user-management, notifications, security
 
-  // Mock data for Notifications
-  const [notificationSettings, setNotificationSettings] = useState({
-    newOrders: true,
-    quotationUpdates: true,
-    announcements: false,
-    deliveryAlerts: true,
-    marketingEmails: false,
+  // Mock data for dealer information
+  const [dealerInfo, setDealerInfo] = useState({
+    name: 'Epoch Cabinets Inc.',
+    id: 'DLR-007',
+    contactPerson: 'Jane Doe',
+    email: 'jane.doe@epochcabinets.com',
+    telephone: '+1 (123) 456-7890',
+    address: '123 Cabinetry Lane\nSuite 100\nWoodville, CA 90210',
+    businessHours: 'Mon-Fri: 9:00 AM - 5:00 PM',
+    logo: 'https://placehold.co/150x80/EEEEEE/333333?text=Dealer+Logo',
   });
 
-  const handleNotificationChange = (e) => {
-    setNotificationSettings({
-      ...notificationSettings,
-      [e.target.name]: e.target.checked,
-    });
+  // Mock data for user management
+  const mockUsers = [
+    { id: 'USR-001', name: 'Alice Smith', email: 'alice.s@example.com', role: 'Admin', status: 'Active' },
+    { id: 'USR-002', name: 'Bob Johnson', email: 'bob.j@example.com', role: 'Sales', status: 'Active' },
+    { id: 'USR-003', name: 'Charlie Brown', email: 'charlie.b@example.com', role: 'Viewer', status: 'Inactive' },
+  ];
+
+
+  const handleDealerInfoChange = (e) => {
+    const { name, value } = e.target;
+    setDealerInfo({ ...dealerInfo, [name]: value });
   };
 
-  const renderUserSettingsSubContent = () => {
-    switch (activeSubMenu) {
-      case 'Dealer Profile':
-        return (
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Dealer Profile</h3>
-            <p className="text-gray-700 mb-6">
-              Manage your company's profile information, including contact details, billing address, and business hours.
-              Ensure your information is up-to-date for seamless communication and operations.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-purple-50 rounded-lg p-6 border border-purple-200">
-              <div className="flex flex-col">
-                <label htmlFor="companyName" className="text-sm font-medium text-gray-700 mb-1">Company Name</label>
-                {/* Added onChange handler */}
-                <input type="text" id="companyName" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="EPOCH Cabinetry Dealer Inc." onChange={() => {}} />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="dealerId" className="text-sm font-medium text-gray-700 mb-1">Dealer ID</label>
-                {/* Added readOnly explicitly */}
-                <input type="text" id="dealerId" className="p-2 border border-gray-300 rounded-lg bg-gray-100" value="DEP-00789" readOnly />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="contactEmail" className="text-sm font-medium text-gray-700 mb-1">Contact Email</label>
-                {/* Added onChange handler */}
-                <input type="email" id="contactEmail" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="contact@yourdealer.com" onChange={() => {}} />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                {/* Added onChange handler */}
-                <input type="tel" id="phoneNumber" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="+1 (555) 123-4567" onChange={() => {}} />
-              </div>
-              <div className="flex flex-col col-span-full">
-                <label htmlFor="address" className="text-sm font-medium text-gray-700 mb-1">Address</label>
-                {/* Added onChange handler */}
-                <input type="text" id="address" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="123 Dealer Main St, Suite 100" onChange={() => {}} />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="city" className="text-sm font-medium text-gray-700 mb-1">City</label>
-                {/* Added onChange handler */}
-                <input type="text" id="city" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Anytown" onChange={() => {}} />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="state" className="text-sm font-medium text-gray-700 mb-1">State/Province</label>
-                {/* Added onChange handler */}
-                <input type="text" id="state" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="CA" onChange={() => {}} />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="zipCode" className="text-sm font-medium text-gray-700 mb-1">Zip/Postal Code</label>
-                {/* Added onChange handler */}
-                <input type="text" id="zipCode" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="90210" onChange={() => {}} />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="country" className="text-sm font-medium text-gray-700 mb-1">Country</label>
-                {/* Added onChange handler */}
-                <input type="text" id="country" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" value="United States" onChange={() => {}} />
-              </div>
-              <div className="flex flex-col col-span-full">
-                <label htmlFor="businessHours" className="text-sm font-medium text-gray-700 mb-1">Business Hours</label>
-                {/* Added onChange handler */}
-                <textarea id="businessHours" rows="2" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Mon-Fri: 9:00 AM - 5:00 PM" onChange={() => {}}></textarea>
-              </div>
-            </div>
-            <button className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transition-colors">
-              Update Profile
-            </button>
-          </div>
-        );
-      case 'User Management':
-        return (
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">User Management</h3>
-            <p className="text-gray-700 mb-6">
-              Add, edit, or remove users from your dealer account. Assign roles and permissions to control access
-              to different sections of the portal.
-            </p>
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-              <div className="flex justify-end mb-4">
-                <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
-                  Add New User
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {/* Fixed whitespace issue in mapping */}
-                    {users.map((user) => (
-                      <tr key={user.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.role}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
-                          <button className="text-red-600 hover:text-red-900">Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        );
-      case 'Notifications':
-        return (
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Notifications</h3>
-            <p className="text-gray-700 mb-6">
-              Configure your notification preferences. Choose how you want to receive alerts for new orders,
-              quotation updates, important announcements, and more.
-            </p>
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="newOrders"
-                    name="newOrders"
-                    checked={notificationSettings.newOrders}
-                    onChange={handleNotificationChange}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                  <label htmlFor="newOrders" className="ml-3 text-gray-700">Email me about new orders</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="quotationUpdates"
-                    name="quotationUpdates"
-                    checked={notificationSettings.quotationUpdates}
-                    onChange={handleNotificationChange}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                  <label htmlFor="quotationUpdates" className="ml-3 text-gray-700">Email me about quotation updates (e.g., approval, rejection)</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="announcements"
-                    name="announcements"
-                    checked={notificationSettings.announcements}
-                    onChange={handleNotificationChange}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                  <label htmlFor="announcements" className="ml-3 text-gray-700">Email me about system announcements and important news</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="deliveryAlerts"
-                    name="deliveryAlerts"
-                    checked={notificationSettings.deliveryAlerts}
-                    onChange={handleNotificationChange}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                  <label htmlFor="deliveryAlerts" className="ml-3 text-gray-700">Email me about upcoming deliveries</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="marketingEmails"
-                    name="marketingEmails"
-                    checked={notificationSettings.marketingEmails}
-                    onChange={handleNotificationChange}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                  <label htmlFor="marketingEmails" className="ml-3 text-gray-700">Receive marketing and promotional emails</label>
-                </div>
-              </div>
-              <button className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transition-colors">
-                Save Notification Preferences
-              </button>
-            </div>
-          </div>
-        );
-      case 'Security':
-        return (
-          <div>
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Security Settings</h3>
-            <p className="text-gray-700 mb-6">
-              Enhance the security of your account. Change your password, enable two-factor authentication,
-              and review your recent login activity.
-            </p>
-            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 space-y-8">
-              {/* Change Password */}
-              <div>
-                <h4 className="text-xl font-semibold text-gray-800 mb-3">Change Password</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col">
-                    <label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                    <input type="password" id="currentPassword" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="newPassword" className="text-sm font-medium text-gray-700 mb-1">New Password</label>
-                    <input type="password" id="newPassword" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
-                  </div>
-                  <div className="flex flex-col">
-                    <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                    <input type="password" id="confirmPassword" className="p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
-                  </div>
-                </div>
-                <button className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transition-colors">
-                  Update Password
-                </button>
-              </div>
-
-              {/* Two-Factor Authentication */}
-              <div>
-                <h4 className="text-xl font-semibold text-gray-800 mb-3">Two-Factor Authentication (2FA)</h4>
-                <p className="text-gray-700 mb-4">Add an extra layer of security to your account.</p>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="font-medium text-gray-800">2FA Status: <span className="text-red-600 font-bold">Disabled</span></span>
-                  <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors">
-                    Enable 2FA
-                  </button>
-                </div>
-              </div>
-
-              {/* Recent Login Activity */}
-              <div>
-                <h4 className="text-xl font-semibold text-gray-800 mb-3">Recent Login Activity</h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device/Browser</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Using static data for demo, these should be dynamically populated in a real app */}
-                      {users.map((user, index) => ( // Use index for a stable key here
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap">2025-06-21 14:30</td>
-                          <td className="px-6 py-4 whitespace-nowrap">192.168.1.10</td>
-                          <td className="px-6 py-4 whitespace-nowrap">Ho Chi Minh City, Vietnam</td>
-                          <td className="px-6 py-4 whitespace-nowrap">Chrome on Windows</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
+  const handleUpdateDealerInfo = () => {
+    alert("Dealer information updated!"); // Replace with real update logic
   };
 
   return (
     <div>
-      <h2 className="text-3xl font-extrabold text-blue-800 mb-6">Settings</h2> {/* Updated heading */}
-      <div className="space-y-4">
-        {renderUserSettingsSubContent()}
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Users & Settings</h1>
+
+      <div className="flex border-b border-gray-200 mb-6">
+        <div className={`${tabItemClasses} ${activeTab === 'dealer-info' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('dealer-info')}>Dealer Information</div>
+        <div className={`${tabItemClasses} ${activeTab === 'user-management' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('user-management')}>User Management</div>
+        <div className={`${tabItemClasses} ${activeTab === 'notifications' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('notifications')}>Notifications</div>
+        <div className={`${tabItemClasses} ${activeTab === 'security' ? activeTabItemClasses : ''}`} onClick={() => setActiveTab('security')}>Security</div>
       </div>
+
+      {activeTab === 'dealer-info' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Dealer Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="dealerName" className="block text-sm font-medium text-gray-700">Dealer Name</label>
+              <input type="text" id="dealerName" name="name" value={dealerInfo.name} onChange={handleDealerInfoChange} className={inputClasses} />
+            </div>
+            <div>
+              <label htmlFor="dealerId" className="block text-sm font-medium text-gray-700">Dealer ID</label>
+              <input type="text" id="dealerId" name="id" value={dealerInfo.id} readOnly className={inputClasses + " bg-gray-50 cursor-not-allowed"} />
+            </div>
+            <div>
+              <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700">Contact Person</label>
+              <input type="text" id="contactPerson" name="contactPerson" value={dealerInfo.contactPerson} onChange={handleDealerInfoChange} className={inputClasses} />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" id="email" name="email" value={dealerInfo.email} onChange={handleDealerInfoChange} className={inputClasses} />
+            </div>
+            <div>
+              <label htmlFor="telephone" className="block text-sm font-medium text-gray-700">Telephone</label>
+              <input type="tel" id="telephone" name="telephone" value={dealerInfo.telephone} onChange={handleDealerInfoChange} className={inputClasses} />
+            </div>
+            <div className="md:col-span-2">
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
+              <textarea id="address" name="address" rows="4" value={dealerInfo.address} onChange={handleDealerInfoChange} className={inputClasses}></textarea>
+            </div>
+            <div>
+              <label htmlFor="businessHours" className="block text-sm font-medium text-gray-700">Business Hours</label>
+              <input type="text" id="businessHours" name="businessHours" value={dealerInfo.businessHours} onChange={handleDealerInfoChange} className={inputClasses} />
+            </div>
+            <div>
+              <label htmlFor="logo" className="block text-sm font-medium text-gray-700">Current Logo</label>
+              <img src={dealerInfo.logo} alt="Dealer Logo" className="mt-1 h-20 w-auto rounded-md border border-gray-200 p-1" />
+              <button className={`${buttonClasses} mt-2`}>Change Logo</button>
+            </div>
+          </div>
+          <button className={`${buttonClasses} mt-6`} onClick={handleUpdateDealerInfo}>Update Information</button>
+        </div>
+      )}
+
+      {activeTab === 'user-management' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">User Management</h2>
+          <p className="text-gray-600 mb-4">Manage users who have access to your dealer portal account.</p>
+          <button className={buttonClasses}>Add New User</button>
+          
+          <div className="mt-6 overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className={tableHeaderClasses}>User ID</th>
+                  <th className={tableHeaderClasses}>Name</th>
+                  <th className={tableHeaderClasses}>Email</th>
+                  <th className={tableHeaderClasses}>Role</th>
+                  <th className={tableHeaderClasses}>Status</th>
+                  <th className={tableHeaderClasses}>Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td className={tableRowClasses}>{user.id}</td>
+                    <td className={tableRowClasses}>{user.name}</td>
+                    <td className={tableRowClasses}>{user.email}</td>
+                    <td className={tableRowClasses}>{user.role}</td>
+                    <td className={tableRowClasses}>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-110 text-red-800' // Using custom red for inactive
+                      }`}>
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className={tableRowClasses}>
+                      <button className="text-indigo-600 hover:text-indigo-900 mr-2">Edit</button>
+                      <button className="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'notifications' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Notification Settings</h2>
+          <p className="text-gray-600 mb-4">Configure your notification preferences.</p>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input type="checkbox" id="notifyQuotations" className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500" />
+              <label htmlFor="notifyQuotations" className="ml-2 block text-sm text-gray-900">Email me about new quotation statuses</label>
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" id="notifyDeliveries" className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500" />
+              <label htmlFor="notifyDeliveries" className="ml-2 block text-sm text-gray-900">Email me about delivery updates</label>
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" id="notifyInvoices" className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500" />
+              <label htmlFor="notifyInvoices" className="ml-2 block text-sm text-gray-900">Email me about pending invoices</label>
+            </div>
+          </div>
+          <button className={`${buttonClasses} mt-6`}>Save Notification Settings</button>
+        </div>
+      )}
+
+      {activeTab === 'security' && (
+        <div className={cardClasses}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Security Settings</h2>
+          <p className="text-gray-600 mb-4">Manage your account security.</p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">Current Password</label>
+              <input type="password" id="currentPassword" className={inputClasses} />
+            </div>
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+              <input type="password" id="newPassword" className={inputClasses} />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+              <input type="password" id="confirmPassword" className={inputClasses} />
+            </div>
+          </div>
+          <button className={`${buttonClasses} mt-6`}>Change Password</button>
+        </div>
+      )}
     </div>
   );
 };
 
-const ReturnsWarrantiesContent = () => {
-  // State to manage the active sub-tab for Returns & Warranties
-  const [activeRnWSubTab, setActiveRnWSubTab] = useState('Returns History');
-
-  // Mock data for Return Requests
-  const [returnRequests, setReturnRequests] = useState([
-    { id: 'RTN-001', date: '2025-05-10', product: 'Defective Base Cabinet (Prod-001)', reason: 'Damaged in transit', status: 'Pending Review', resolution: 'N/A' },
-    { id: 'RTN-002', date: '2025-05-15', product: 'Incorrect Wall Cabinet (Prod-002)', reason: 'Wrong item shipped', status: 'Approved', resolution: 'Replacement Shipped' },
-    { id: 'RTN-003', date: '2025-06-01', product: 'Scratched Tall Cabinet (Prod-003)', reason: 'Customer damage', status: 'Rejected', resolution: 'Repair options provided' },
-  ]);
-
-  // Mock data for Warranty Claims
-  const [warrantyClaims, setWarrantyClaims] = useState([
-    { id: 'WTY-001', date: '2025-04-20', product: 'Cabinet Door Hinge (Prod-005)', issue: 'Loose hinge, squeaking', status: 'Under Investigation', resolution: 'N/A' },
-    { id: 'WTY-002', date: '2025-05-05', product: 'Cabinet Finish (Prod-008)', issue: 'Fading color', status: 'Approved', resolution: 'Refinishing service scheduled' },
-    { id: 'WTY-003', date: '2025-06-12', product: 'Drawer Glides (Prod-004)', issue: 'Sticking drawer', status: 'Closed', resolution: 'Replacement parts sent' },
-  ]);
-
-  const renderRnWContent = () => {
-    switch (activeRnWSubTab) {
-      case 'Returns History':
-        return (
-          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 w-full">
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Return Requests History</h3>
-            {returnRequests.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Request ID</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Resolution</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {returnRequests.map((request) => (
-                      <tr key={request.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">{request.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{request.date}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{request.product}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{request.reason}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            request.status === 'Pending Review' ? 'bg-yellow-100 text-yellow-800' :
-                            request.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {request.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">{request.resolution}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">No return requests found.</p>
-            )}
-          </div>
-        );
-      case 'Warranties History':
-        return (
-          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 w-full">
-            <h3 className="text-2xl font-semibold text-blue-700 mb-4">Warranty Claims History</h3>
-            {warrantyClaims.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Claim ID</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Resolution</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {warrantyClaims.map((claim) => (
-                      <tr key={claim.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">{claim.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{claim.date}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{claim.product}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{claim.issue}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            claim.status === 'Under Investigation' ? 'bg-yellow-100 text-yellow-800' :
-                            claim.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                            'bg-blue-100 text-blue-800' // Using blue for 'Closed'
-                          }`}>
-                            {claim.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">{claim.resolution}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">No warranty claims found.</p>
-            )}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div>
-      <h2 className="text-3xl font-extrabold text-blue-800 mb-6">Returns & Warranties</h2>
-      <p className="text-gray-700 leading-relaxed mb-8">
-        Initiate product returns and manage warranty claims for EPOCH Cabinetry products.
-        Access our comprehensive return policy and warranty guidelines here.
-      </p>
-
-      {/* Submit Request Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-red-50 rounded-lg p-6 shadow-md border border-red-200">
-          <h3 className="text-xl font-semibold text-red-700 mb-2">Submit a Return Request</h3>
-          <p className="text-sm text-gray-600">
-            Fill out the return request form for damaged or incorrect items.
-          </p>
-          <button className="mt-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-            Start Return
-          </button>
-        </div>
-        <div className="bg-orange-50 rounded-lg p-6 shadow-md border border-orange-200">
-          <h3 className="text-xl font-semibold text-orange-700 mb-2">Submit a Warranty Claim</h3>
-          <p className="text-sm text-gray-600">
-            File a claim for product defects covered under warranty.
-          </p>
-          <button className="mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-            Start Claim
-          </button>
-        </div>
-      </div>
-
-      {/* Returns & Warranties History Tabs */}
-      <div className="bg-blue-100 py-3 shadow-inner rounded-lg mb-6">
-        <div className="flex space-x-4 justify-center">
-          <button
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-              activeRnWSubTab === 'Returns History'
-                ? 'bg-blue-700 text-white shadow-md'
-                : 'text-blue-800 hover:bg-blue-200'
-            }`}
-            onClick={() => setActiveRnWSubTab('Returns History')}
-          >
-            Returns History
-          </button>
-          <button
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-200 ease-in-out ${
-              activeRnWSubTab === 'Warranties History'
-                ? 'bg-blue-700 text-white shadow-md'
-                : 'text-blue-800 hover:bg-blue-200'
-            }`}
-            onClick={() => setActiveRnWSubTab('Warranties History')}
-          >
-            Warranties History
-          </button>
-        </div>
-      </div>
-
-      {/* Conditional rendering of content based on active sub-tab */}
-      {renderRnWContent()}
-    </div>
-  );
-};
-
-/**
- * Documents & Resources Content Component
- * Organizes various documents into categories.
- */
-const DocumentsResourcesContent = () => (
-  <div>
-    <h2 className="text-3xl font-extrabold text-blue-800 mb-6">Documents & Resources</h2>
-    <p className="text-gray-700 leading-relaxed mb-8">
-      Find all essential documents, marketing materials, technical specifications, and training resources
-      to support your sales and installation processes.
-    </p>
-    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-      <div className="bg-teal-50 rounded-lg p-6 shadow-md border border-teal-200">
-        <h3 className="text-xl font-semibold text-teal-700 mb-2">Product Documentation</h3>
-        <p className="text-sm text-gray-600">Access installation guides, technical specifications, and product manuals.</p>
-        <button className="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-          View Documentation
-        </button>
-      </div>
-      <div className="bg-lime-50 rounded-lg p-6 shadow-md border border-lime-200">
-        <h3 className="text-xl font-semibold text-lime-700 mb-2">Training Resources</h3>
-        <p className="text-sm text-gray-600">Improve your product knowledge and sales techniques with our training modules and webinars.</p>
-        <button className="mt-4 bg-lime-500 hover:bg-lime-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-          Access Training
-        </button>
-      </div>
-      <div className="bg-cyan-50 rounded-lg p-6 shadow-md border border-cyan-200">
-        <h3 className="text-xl font-semibold text-cyan-700 mb-2">Marketing Materials</h3>
-        <p className="text-sm text-gray-600">Download high-resolution images, brochures, videos, and other promotional assets.</p>
-        <button className="mt-4 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-          Download Assets
-        </button>
-      </div>
-      <div className="bg-purple-50 rounded-lg p-6 shadow-md border border-purple-200">
-        <h3 className="text-xl font-semibold text-purple-700 mb-2">Company Policies & Legal</h3>
-        <p className="text-sm text-gray-600">Review dealer agreements, privacy policies, terms of service, and other legal documents.</p>
-        <button className="mt-4 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-          View Policies
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-// This is the default export for the React app.
 export default App;
